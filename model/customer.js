@@ -7,6 +7,7 @@ const customerSchema = mongoose.Schema({
     },
     email: {
         type: String,
+        unique: true,
         required: true
     },
     password: {
@@ -21,9 +22,9 @@ const customerSchema = mongoose.Schema({
         type: String,
         required: true
     },
-    status: {
-        type: String,
-        default: "pending"
+    isVerified: {
+        type: Boolean,
+        default: false
     }
 })
 

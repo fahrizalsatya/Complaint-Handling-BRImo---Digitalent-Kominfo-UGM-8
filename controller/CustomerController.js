@@ -4,22 +4,12 @@ import Customer from '../model/customer.js'
 import bcrypt from 'bcrypt'
 import jwt from 'jsonwebtoken'
 import Config from '../config/config.js'
+import secretCode from '../config/secretCode.js'
 
 const CustomerRouter = express.Router()
 
 CustomerRouter.use(bodyParser.urlencoded({ extended: false }))
 CustomerRouter.use(bodyParser.json())
-
-
-//SMTP Transport
-var smtpTransport = nodemailer.createTransport("SMTP", {
-    service: "Gmail",
-    auth: {
-        user: process.env.EMAIL,
-        pass: process.env.PASSWORD
-    }
-});
-var rand, mailOptions, host, link;
 
 //SignUp
 //POST /api/customer/signup
@@ -33,10 +23,10 @@ CustomerRouter.post('/sign-up', async(req, res) => {
         if (findCust || findAccountNum || findNoKTP) {
             res.status(201).json({ message: 'Tidak dapat membuat akun baru, periksa kembali data diri anda.' })
         } else {
-            var saltRounds = 5
+            var saltRounds = 12
             const hashedPassword = await bcrypt.hash(password, saltRounds)
 
-            const createdCust = new User({
+            const createdCust = new Customer({
                 "name": name,
                 "email": email,
                 "password": hashedPassword,
@@ -44,57 +34,78 @@ CustomerRouter.post('/sign-up', async(req, res) => {
                 "no_ktp": no_ktp,
             })
 
-            const savedCust = await createdCust.save()
-            res.status(201).json(savedCust, {
-                "status": "Akun customer baru berhasil ditambahkan."
-            })
-
-            //SEND MAIL VERIFICATION
-            //random token
-            rand = Math.floor((Math.random() * 100) + 54);
-            host = req.get('host')
-
-            //link token
-            link = "http://" + req.get('host') + "/verify?id=" + rand;
-
-            //Send link token to mail
-            mailOptions = {
-                to: req.query.to,
-                subject: "Please confirm your Email account",
-                html: "Hello,<br> Please Click on the link to verify your email.<br><a href=" + link + ">Click here to verify</a>"
-            }
-            console.log(mailOptions);
-            smtpTransport.sendMail(mailOptions, function(err, res) {
+            // Create and save the customer
+            createdCust.save(function(err) {
                 if (err) {
-                    console.log(err);
-                    res.end("error");
-                } else {
-                    console.log("Message sent: " + res.message);
-                    res.end("sent");
+                    return res.status(500).send({ msg: err.message });
                 }
-            });
+                // Create a verification token for this customer
+                var token = new secretCode({ _custId: createdCust._id, token: crypto.randomBytes(16).toString('hex') });
+
+                // Save the verification token
+                token.save(function(err) {
+                    if (err) { return res.status(500).send({ msg: err.message }); }
+
+                    // Send the email
+                    var transporter = nodemailer.createTransport({ service: 'Sendgrid', auth: { user: process.env.MAIL, pass: process.env.PASS } });
+                    var mailOptions = { from: process.env.MAIL, to: createdCust.email, subject: 'Account Verification Token', text: 'Hello,\n\n' + 'Please verify your account by clicking the link: \nhttp:\/\/' + req.headers.host + '\/verify\/' + token.token + '.\n' };
+                    transporter.sendMail(mailOptions, function(err) {
+                        if (err) { return res.status(500).send({ msg: err.message }); }
+                        res.status(200).send('A verification email has been sent to ' + createdCust.email + '.');
+                    });
+                });
+            })
         }
     } catch (error) {
         res.status(500).json({ error: error })
     }
 })
 
+//SEND MAIL
+CustomerRouter.get('/send', async(req, res) => {
+    Customer.findOne({ email: req.body.email }, function(err, customer) {
+        if (!customer) return res.status(400).send({ msg: 'We were unable to find a user with that email.' });
+        if (customer.isVerified) return res.status(400).send({ msg: 'This account has already been verified. Please log in.' });
+
+        // Create a verification token, save it, and send email
+        var token = new secretCode({ _userId: user._id, token: crypto.randomBytes(16).toString('hex') });
+
+        // Save the token
+        token.save(function(err) {
+            if (err) { return res.status(500).send({ msg: err.message }); }
+
+            // Send the email
+            var transporter = nodemailer.createTransport({ service: 'Sendgrid', auth: { user: process.env.MAIL, pass: process.env.PASS } });
+            var mailOptions = { from: process.env.MAIL, to: createdCust.email, subject: 'Account Verification Token', text: 'Hello,\n\n' + 'Please verify your account by clicking the link: \nhttp:\/\/' + req.headers.host + '\/verify\/' + token.token + '.\n' };
+            transporter.sendMail(mailOptions, function(err) {
+                if (err) { return res.status(500).send({ msg: err.message }); }
+                res.status(200).send('A verification email has been sent to ' + createdCust.email + '.');
+            });
+        });
+
+    });
+})
+
 //Verify
-//GET /api/customer/verify?id=?
-CustomerRouter.get('/verify', function(req, res) {
-    console.log(req.protocol + ":/" + req.get('host'));
-    if ((req.protocol + "://" + req.get('host')) == ("http://" + host)) {
-        console.log("Domain is matched. Information is from Authentic email");
-        if (req.query.id == rand) {
-            console.log("email is verified");
-            res.end("<h1>Email " + mailOptions.to + " is been Successfully verified");
-        } else {
-            console.log("email is not verified");
-            res.end("<h1>Bad Request</h1>");
-        }
-    } else {
-        res.end("<h1>Request is from unknown source");
-    }
+//GET /api/customer/verify
+CustomerRouter.get('/verify', async(req, res) => {
+    // Find a matching token
+    secretCode.findOne({ token: req.body.token }, function(err, token) {
+        if (!token) return res.status(400).send({ type: 'not-verified', msg: 'We were unable to find a valid token. Your token my have expired.' });
+
+        // If we found a token, find a matching user
+        Customer.findOne({ _id: token._userId, email: req.body.email }, function(err, customer) {
+            if (!customer) return res.status(400).send({ msg: 'We were unable to find a user for this token.' });
+            if (customer.isVerified) return res.status(400).send({ type: 'already-verified', msg: 'This user has already been verified.' });
+
+            // Verify and save the user
+            customer.isVerified = true;
+            customer.save(function(err) {
+                if (err) { return res.status(500).send({ msg: err.message }); }
+                res.status(200).send("The account has been verified. Please log in.");
+            });
+        });
+    });
 });
 
 //Login endpoint untuk customer
