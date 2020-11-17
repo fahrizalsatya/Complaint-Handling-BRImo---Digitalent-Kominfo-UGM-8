@@ -8,11 +8,10 @@ import SpvRouter from './controller/SpvController.js'
 
 const app = express()
 
-mongoose.connect("mongodb://localhost:27017/complaint-handling",
-{
-    useNewUrlParser:true,
-    useUnifiedTopology:true
-}).then(()=>{
+mongoose.connect("mongodb://localhost:27017/complaint-handling", {
+    useNewUrlParser: true,
+    useUnifiedTopology: true
+}).then(() => {
     console.log('Database Succesfully Connected')
 }).catch(err => {
     console.log('Failed to Connect Database')
@@ -22,15 +21,15 @@ mongoose.connect("mongodb://localhost:27017/complaint-handling",
 app.use(morgan('dev'))
 app.use(express.json())
 
-app.get('/',(req,res)=>{
+app.get('/', (req, res) => {
     res.json({
-        message:"Succes"
+        message: "Succes"
     })
 })
 
-app.use('/api/customer',CustomerRouter)
-app.use('/api/cs',csRouter)
-app.use('api/spv',SpvRouter)
+app.use('/api/customer', CustomerRouter)
+app.use('/api/cs', csRouter)
+app.use('api/spv', SpvRouter)
 
 
 const port = 8000
