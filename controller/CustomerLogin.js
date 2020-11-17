@@ -3,17 +3,17 @@ import bodyParser from 'body-parser'
 import Customer from '../model/customer.js'
 import bcrypt from 'bcrypt'
 import jwt from 'jsonwebtoken'
-import Config from '../config/config'
+import Config from '../config/config.js'
 
-const router = express.Router()
+const CustomerRouter = express.Router()
 
-router.use(bodyParser.urlencoded({extended:false}))
-router.use(bodyParser.json())
+CustomerRouter.use(bodyParser.urlencoded({extended:false}))
+CustomerRouter.use(bodyParser.json())
 
 //Login dengan token
 //POST /api/customer/login
 
-router.post('/login',async(req,res)=>{
+CustomerRouter.post('/login',async(req,res)=>{
     try {
         const {email, password} = req.body
 
@@ -48,4 +48,4 @@ router.post('/login',async(req,res)=>{
     }
 })
 
-export default CustomerLogin
+export default CustomerRouter
