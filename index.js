@@ -2,6 +2,7 @@ import express from 'express'
 import morgan from 'morgan'
 import mongoose from 'mongoose'
 import CustomerRouter from './controller/CustomerLogin.js'
+import csRouter from './controller/CSaccount.js'
 
 
 const app = express()
@@ -27,6 +28,7 @@ app.get('/',(req,res)=>{
 })
 
 app.use('/api/customer',CustomerRouter)
+app.use('/api/cs',csRouter)
 
 
 const port = 8000
