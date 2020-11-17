@@ -10,9 +10,7 @@ const CustomerRouter = express.Router()
 CustomerRouter.use(bodyParser.urlencoded({extended:false}))
 CustomerRouter.use(bodyParser.json())
 
-//Login dengan token
-//POST /api/customer/login
-
+//Login endpoint untuk customer
 CustomerRouter.post('/login',async(req,res)=>{
     try {
         const {email, password} = req.body

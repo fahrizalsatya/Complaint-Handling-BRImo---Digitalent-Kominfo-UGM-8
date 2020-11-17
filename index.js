@@ -1,8 +1,9 @@
 import express from 'express'
 import morgan from 'morgan'
 import mongoose from 'mongoose'
-import CustomerRouter from './controller/CustomerLogin.js'
-import csRouter from './controller/CSaccount.js'
+import CustomerRouter from './controller/CustomerController.js'
+import csRouter from './controller/CsController.js'
+import SpvRouter from './controller/SpvController.js'
 
 
 const app = express()
@@ -29,6 +30,7 @@ app.get('/',(req,res)=>{
 
 app.use('/api/customer',CustomerRouter)
 app.use('/api/cs',csRouter)
+app.use('api/spv',SpvRouter)
 
 
 const port = 8000
