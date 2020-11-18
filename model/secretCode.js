@@ -14,7 +14,7 @@ const secretSchema = new mongoose.Schema({
         default: Date.now(),
         expires: 600,
     },
-});
+})
 
 const secretCode = mongoose.model('secretCode', secretSchema)
 export default secretCode
