@@ -7,8 +7,19 @@ ticketRouter.post('/', async(req, res) => {
    // Insert logic here
 })
 
-ticketRouter.get('/', async(req, res) => {
+//GET ticket list unread
+ticketRouter.get('/ticketList/unread', async(req, res) => {
    // Insert logic here
+   const ticket= await Ticket.aggregate([
+      {$match:{ status : "unread"}}
+   ])
+   if (ticket != null) {
+      res.json(ticket)
+   }
+   else{
+      res.json("Ticket is empty")
+   }
+
 })
 
 export default ticketRouter
