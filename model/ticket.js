@@ -13,6 +13,14 @@ const ticketSchema = mongoose.Schema({
       type: String,
       required: true
    },
+   screenshot: {
+      type: String,
+      required: false
+   },
+   url_video: {
+      type: String,
+      required: false
+   },
    assigned_to: {
       type: String,
       required: true
