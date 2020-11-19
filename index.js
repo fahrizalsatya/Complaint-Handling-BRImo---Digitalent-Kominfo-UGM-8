@@ -33,7 +33,10 @@ app.get('/', (req, res) => {
 app.use('/api/customer', CustomerRouter)
 app.use('/api/cs', csRouter)
 app.use('api/spv', SpvRouter)
-app.use('api/ticket',ticketRouter)
+
+app.use('api/customer/ticket-list', ticketRouter)
+app.use('api/cs/ticket-list', ticketRouter)
+app.use('api/spv/ticket-list', ticketRouter)
 
 
 const port = 8000

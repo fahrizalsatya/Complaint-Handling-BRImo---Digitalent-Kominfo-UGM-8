@@ -142,5 +142,4 @@ CustomerRouter.post('/login', async(req, res) => {
     }
 })
 
-
 export default CustomerRouter

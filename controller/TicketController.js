@@ -4,41 +4,39 @@ import Ticket from '../model/ticket.js'
 const ticketRouter = express.Router()
 
 // Create ticket by Customers
-ticketRouter.post('/init_ticket', async(req, res) => {
-   // Insert logic here
-   
+ticketRouter.post('/init-ticket', async(req, res) => {
+    // Insert logic here
+
 })
 
 //GET ticket list unread
-ticketRouter.get('/ticketList/unread', async(req, res) => {
-   // Insert logic here
-   const ticket= await Ticket.aggregate([
-      {$match:{ status : "unread"}}
-   ])
-   if (ticket != null) {
-      res.json(ticket)
-   }
-   else{
-      res.json("Ticket is empty")
-   }
+ticketRouter.get('/ticket-list/unread', async(req, res) => {
+    // Insert logic here
+    const ticket = await Ticket.aggregate([
+        { $match: { status: "unread" } }
+    ])
+    if (ticket != null) {
+        res.json(ticket)
+    } else {
+        res.json("Ticket is empty")
+    }
 
 })
 
 //GET Ticket search based on tag and category endpoint
-ticketRouter.get('/ticketlist/search',async(req,res)=>{
+ticketRouter.get('/ticket-list/search', async(req, res) => {
     const tickets = await Ticket.aggregate(
-        [
-            {
-                $match:{tag:String(req.query.tag)}
+        [{
+                $match: { tag: String(req.query.tag) }
             },
             {
-                $match:{category:String(req.query.category)}
+                $match: { category: String(req.query.category) }
             }
         ]
     )
-    if(tickets){
+    if (tickets) {
         res.json(tickets)
-    } else{
+    } else {
         res.send("Ticket not found")
     }
 })
