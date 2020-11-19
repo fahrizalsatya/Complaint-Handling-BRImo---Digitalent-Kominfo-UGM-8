@@ -12,15 +12,31 @@ ticketRouter.post('/init-ticket', async(req, res) => {
 //GET ticket list unread
 ticketRouter.get('/ticket-list/unread', async(req, res) => {
     // Insert logic here
-    const ticket = await Ticket.aggregate([
+    const tickets = await Ticket.aggregate([
         { $match: { status: "unread" } }
     ])
-    if (ticket != null) {
-        res.json(ticket)
+    if (tickets != null) {
+        res.json(tickets)
     } else {
-        res.json("Ticket is empty")
+        res.send("Ticket is empty")
     }
 
+})
+
+//PUT Claim ticket
+ticketRouter.put('/pickticket', async(req,res)=>{
+    const [idTicket , idCS]= req.body
+    const ticket= Ticket.findById(idTicket)
+    if (ticket) {
+        Ticket.aggregate([{
+            $replaceWith: {assigned_to:{idCS}}
+        }])
+
+        const updateTicket= await ticket.save()
+        res.json(updateTicket)
+    } else{
+        res.send("Update ticket failed")
+    }
 })
 
 //GET Ticket search based on tag and category endpoint
