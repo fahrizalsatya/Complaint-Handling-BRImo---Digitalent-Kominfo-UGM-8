@@ -4,7 +4,6 @@ import Supervisor from '../model/spv.js'
 import bcrypt from 'bcrypt'
 import jwt from 'jsonwebtoken'
 import Config from '../config/config.js'
-import Ticket from '../model/ticket.js'
 
 const SpvRouter = express.Router()
 
@@ -66,24 +65,6 @@ SpvRouter.get('/ticket-list/escalated/:category', async(req, res) => {
             },
             {
                 $match: { category: String(req.params.category) }
-            }
-        ]
-    )
-    if (tickets) {
-        res.json(tickets)
-    } else {
-        res.send("Ticket not found")
-    }
-})
-
-//GET Ticket search based on tag and category endpoint
-ticketRouter.get('/ticket-list/search', async(req, res) => {
-    const tickets = await Ticket.aggregate(
-        [{
-                $match: { tag: String(req.query.tag) }
-            },
-            {
-                $match: { category: String(req.query.category) }
             }
         ]
     )

@@ -57,4 +57,35 @@ ticketRouter.get('/ticket-list/search', async(req, res) => {
     }
 })
 
+
+//GET Escalated Ticket List for SPV
+// ticketRouter.get('/ticket-list/escalated', async(req, res) => {
+//     const tickets = await Ticket.aggregate({
+//         $match: { tag: 'ESCALATED' }
+//     })
+//     if (tickets) {
+//         res.json(tickets)
+//     } else {
+//         res.send("Ticket not found")
+//     }
+// })
+
+//GET Escalated Ticket List by Category for SPV
+// ticketRouter.get('/ticket-list/escalated/:category', async(req, res) => {
+//     const tickets = await Ticket.aggregate(
+//         [{
+//                 $match: { tag: 'ESCALATED' }
+//             },
+//             {
+//                 $match: { category: String(req.params.category) }
+//             }
+//         ]
+//     )
+//     if (tickets) {
+//         res.json(tickets)
+//     } else {
+//         res.send("Ticket not found")
+//     }
+// })
+
 export default ticketRouter
