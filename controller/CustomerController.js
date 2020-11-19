@@ -16,46 +16,44 @@ CustomerRouter.use(bodyParser.json())
 CustomerRouter.post('/signup', async(req, res) => {
     try {
         const { name, email, password, account_number, no_ktp } = req.body
-        const findCust = await Customer.findOne({ email })
-        const findAccountNum = await Customer.findOne({ account_number })
-        const findNoKTP = await Customer.findOne({ no_ktp })
+        Customer.findOne({ email }, function(err, customer) {
+            if (customer) {
+                res.status(201).json({ message: 'The email address you have entered is already associated with another account.' })
+            } else {
+                var saltRounds = 12
+                const hashedPassword = await bcrypt.hash(password, saltRounds)
 
-        if (findCust || findAccountNum || findNoKTP) {
-            res.status(201).json({ message: 'Tidak dapat membuat akun baru, periksa kembali data diri anda.' })
-        } else {
-            var saltRounds = 12
-            const hashedPassword = await bcrypt.hash(password, saltRounds)
+                customer = new Customer({
+                    "name": name,
+                    "email": email,
+                    "password": hashedPassword,
+                    "account_number": account_number,
+                    "no_ktp": no_ktp,
+                })
 
-            const createdCust = new Customer({
-                "name": name,
-                "email": email,
-                "password": hashedPassword,
-                "account_number": account_number,
-                "no_ktp": no_ktp,
-            })
-
-            // Create and save the customer
-            createdCust.save(function(err) {
-                if (err) {
-                    return res.status(500).send({ msg: err.message });
-                }
-                // Create a verification token for this customer
-                var token = new secretCode({ _custId: createdCust._id, token: crypto.randomBytes(16).toString('hex') });
-                console.log(token)
-                    // Save the verification token
-                token.save(function(err) {
-                    if (err) { return res.status(500).send({ msg: err.message }); }
-
-                    // Send the email
-                    var transporter = nodemailer.createTransport({ service: 'Sendgrid', auth: { user: process.env.MAIL, pass: process.env.PASS } });
-                    var mailOptions = { from: process.env.MAIL, to: createdCust.email, subject: 'Account Verification Token', text: 'Hello,\n\n' + 'Please verify your account by clicking the link: \nhttp:\/\/' + req.headers.host + '\/verify\/' + createdCust.email + '\/' + token.token + '.\n' };
-                    transporter.sendMail(mailOptions, function(err) {
+                // Create and save the customer
+                customer.save(function(err) {
+                    if (err) {
+                        return res.status(500).send({ msg: err.message });
+                    }
+                    // Create a verification token for this customer
+                    var token = new secretCode({ _custId: customer._id, token: crypto.randomBytes(16).toString('hex') });
+                    console.log(token)
+                        // Save the verification token
+                    token.save(function(err) {
                         if (err) { return res.status(500).send({ msg: err.message }); }
-                        res.status(200).send('A verification email has been sent to ' + createdCust.email + '.');
+
+                        // Send the email
+                        var transporter = nodemailer.createTransport({ service: 'Sendgrid', auth: { user: process.env.MAIL, pass: process.env.PASS } });
+                        var mailOptions = { from: process.env.MAIL, to: createdCust.email, subject: 'Account Verification Token', text: 'Hello,\n\n' + 'Please verify your account by clicking the link: \nhttp:\/\/' + req.headers.host + '\/verify\/' + customer.email + '\/' + token.token + '.\n' };
+                        transporter.sendMail(mailOptions, function(err) {
+                            if (err) { return res.status(500).send({ msg: err.message }); }
+                            res.status(200).send('A verification email has been sent to ' + customer.email + '.');
+                        });
                     });
-                });
-            })
-        }
+                })
+            }
+        })
     } catch (error) {
         res.status(500).json({ error: error })
     }
@@ -90,11 +88,11 @@ CustomerRouter.get('/send', async(req, res) => {
 //GET /api/customer/verify
 CustomerRouter.get('/verify/:email/:token', async(req, res) => {
     // Find a matching token
-    secretCode.findOne({ token: req.body.token }, function(err, token) {
+    secretCode.findOne({ token: req.params.token }, function(err, token) {
         if (!token) return res.status(400).send({ type: 'not-verified', msg: 'We were unable to find a valid token. Your token my have expired.' });
 
         // If we found a token, find a matching user
-        Customer.findOne({ _id: token._userId, email: req.body.email }, function(err, customer) {
+        Customer.findOne({ _id: token._userId, email: req.params.email }, function(err, customer) {
             if (!customer) return res.status(400).send({ msg: 'We were unable to find a user for this token.' });
             if (customer.isVerified) return res.status(400).send({ type: 'already-verified', msg: 'This user has already been verified.' });
 
