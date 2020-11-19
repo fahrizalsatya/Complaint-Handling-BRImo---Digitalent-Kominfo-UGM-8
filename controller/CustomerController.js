@@ -4,7 +4,7 @@ import Customer from '../model/customer.js'
 import bcrypt from 'bcrypt'
 import jwt from 'jsonwebtoken'
 import Config from '../config/config.js'
-import secretCode from '../config/secretCode.js'
+import secretCode from '../model/secretCode.js'
 
 const CustomerRouter = express.Router()
 
@@ -13,7 +13,7 @@ CustomerRouter.use(bodyParser.json())
 
 //SignUp
 //POST /api/customer/signup
-CustomerRouter.post('/sign-up', async(req, res) => {
+CustomerRouter.post('/signup', async(req, res) => {
     try {
         const { name, email, password, account_number, no_ktp } = req.body
         const findCust = await Customer.findOne({ email })
@@ -41,14 +41,14 @@ CustomerRouter.post('/sign-up', async(req, res) => {
                 }
                 // Create a verification token for this customer
                 var token = new secretCode({ _custId: createdCust._id, token: crypto.randomBytes(16).toString('hex') });
-
-                // Save the verification token
+                console.log(token)
+                    // Save the verification token
                 token.save(function(err) {
                     if (err) { return res.status(500).send({ msg: err.message }); }
 
                     // Send the email
                     var transporter = nodemailer.createTransport({ service: 'Sendgrid', auth: { user: process.env.MAIL, pass: process.env.PASS } });
-                    var mailOptions = { from: process.env.MAIL, to: createdCust.email, subject: 'Account Verification Token', text: 'Hello,\n\n' + 'Please verify your account by clicking the link: \nhttp:\/\/' + req.headers.host + '\/verify\/' + token.token + '.\n' };
+                    var mailOptions = { from: process.env.MAIL, to: createdCust.email, subject: 'Account Verification Token', text: 'Hello,\n\n' + 'Please verify your account by clicking the link: \nhttp:\/\/' + req.headers.host + '\/verify\/' + createdCust.email + '\/' + token.token + '.\n' };
                     transporter.sendMail(mailOptions, function(err) {
                         if (err) { return res.status(500).send({ msg: err.message }); }
                         res.status(200).send('A verification email has been sent to ' + createdCust.email + '.');
@@ -68,7 +68,7 @@ CustomerRouter.get('/send', async(req, res) => {
         if (customer.isVerified) return res.status(400).send({ msg: 'This account has already been verified. Please log in.' });
 
         // Create a verification token, save it, and send email
-        var token = new secretCode({ _userId: user._id, token: crypto.randomBytes(16).toString('hex') });
+        var token = new secretCode({ _custId: customer._id, token: crypto.randomBytes(16).toString('hex') });
 
         // Save the token
         token.save(function(err) {
@@ -76,10 +76,10 @@ CustomerRouter.get('/send', async(req, res) => {
 
             // Send the email
             var transporter = nodemailer.createTransport({ service: 'Sendgrid', auth: { user: process.env.MAIL, pass: process.env.PASS } });
-            var mailOptions = { from: process.env.MAIL, to: createdCust.email, subject: 'Account Verification Token', text: 'Hello,\n\n' + 'Please verify your account by clicking the link: \nhttp:\/\/' + req.headers.host + '\/verify\/' + token.token + '.\n' };
+            var mailOptions = { from: process.env.MAIL, to: customer.email, subject: 'Account Verification Token', text: 'Hello,\n\n' + 'Please verify your account by clicking the link: \nhttp:\/\/' + req.headers.host + '\/verify\/' + customer.email + '\/' + token.token + '.\n' };
             transporter.sendMail(mailOptions, function(err) {
                 if (err) { return res.status(500).send({ msg: err.message }); }
-                res.status(200).send('A verification email has been sent to ' + createdCust.email + '.');
+                res.status(200).send('A verification email has been sent to ' + customer.email + '.');
             });
         });
 
@@ -88,7 +88,7 @@ CustomerRouter.get('/send', async(req, res) => {
 
 //Verify
 //GET /api/customer/verify
-CustomerRouter.get('/verify', async(req, res) => {
+CustomerRouter.get('/verify/:email/:token', async(req, res) => {
     // Find a matching token
     secretCode.findOne({ token: req.body.token }, function(err, token) {
         if (!token) return res.status(400).send({ type: 'not-verified', msg: 'We were unable to find a valid token. Your token my have expired.' });

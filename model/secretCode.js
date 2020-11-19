@@ -1,4 +1,5 @@
 import mongoose from 'mongoose'
+
 const secretSchema = new mongoose.Schema({
     _custId: {
         type: mongoose.Schema.Types.ObjectId,

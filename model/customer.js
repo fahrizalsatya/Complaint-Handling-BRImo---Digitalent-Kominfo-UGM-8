@@ -16,10 +16,12 @@ const customerSchema = mongoose.Schema({
     },
     account_number: {
         type: String,
+        unique: true,
         required: true
     },
     no_ktp: {
         type: String,
+        unique: true,
         required: true
     },
     isVerified: {

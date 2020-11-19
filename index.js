@@ -5,10 +5,12 @@ import CustomerRouter from './controller/CustomerController.js'
 import csRouter from './controller/CsController.js'
 import SpvRouter from './controller/SpvController.js'
 
+import dotenv from 'dotenv'
+dotenv.config()
 
 const app = express()
 
-mongoose.connect("mongodb://localhost:27017/complaint-handling", {
+mongoose.connect(process.env.MONGODB_URI, {
     useNewUrlParser: true,
     useUnifiedTopology: true
 }).then(() => {
