@@ -224,12 +224,13 @@ CustomerRouter.post('/change-password', async(req, res) => {
                     var saltRounds = 12
                     const hashedPassword = await bcrypt.hash(newPassword, saltRounds)
 
-                    //Changed Hashed Password
+                    //Changed password to Hashed Password
                     customer.password = hashedPassword
                     console.log(customer.newPassword)
                     console.log(customer.password)
                     console.log(customer)
 
+                    //Save New Password
                     customer.save()
 
                     res.status(200).send({ "status": "Successfully Changed Pasword!!" })
