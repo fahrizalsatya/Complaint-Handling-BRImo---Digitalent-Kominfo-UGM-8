@@ -46,6 +46,9 @@ CustomerRouter.post('/signup', async(req, res) => {
                     token.save(function(err) {
                         if (err) { return res.status(500).send({ msg: err.message }); }
                         console.log('Hello,\n\n' + 'Please verify your account by clicking the link: \nhttp:\/\/' + req.headers.host + '\/api\/customer\/verify\/' + customer.email + '\/' + token.token)
+
+                        //Show in Postman Only
+                        res.status(200).send('Hello,\n\n' + 'Please verify your account by clicking the link: \nhttp:\/\/' + req.headers.host + '\/api\/customer\/verify\/' + customer.email + '\/' + token.token)
                             // Send the email
                         var transporter = nodemailer.createTransport({ service: 'Sendgrid', auth: { user: process.env.MAIL, pass: process.env.PASS } });
                         var mailOptions = { from: process.env.MAIL, to: customer.email, subject: 'Account Verification Token', text: 'Hello,\n\n' + 'Please verify your account by clicking the link: \nhttp:\/\/' + req.headers.host + '\/api\/customer\/verify\/' + customer.email + '\/' + token.token };
@@ -73,6 +76,9 @@ CustomerRouter.post('/resend', async(req, res) => {
         var token = new secretCode({ _custId: customer._id, token: crypto.randomBytes(16).toString('hex') });
         console.log(token)
         console.log('Hello,\n\n' + 'Please verify your account by clicking the link: \nhttp:\/\/' + req.headers.host + '\/api\/customer\/verify\/' + customer.email + '\/' + token.token)
+
+        //Show in Postman only
+        res.status(200).send('Hello,\n\n' + 'Please verify your account by clicking the link: \nhttp:\/\/' + req.headers.host + '\/api\/customer\/verify\/' + customer.email + '\/' + token.token)
 
         // Save the token
         token.save(function(err) {
@@ -177,6 +183,9 @@ CustomerRouter.post('/forgot-password', async(req, res) => {
         console.log(newPassword)
         console.log(customer.password)
         console.log(customer)
+
+        //Show in Postman only
+        res.status(200).send(newPassword)
 
         // Save the New Password
         customer.save(function(err) {
