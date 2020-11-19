@@ -47,8 +47,8 @@ ticketRouter.get('/ticket-list/search', async(req, res) => {
 //POST api/cs/ticket-list/close/:id
 ticketRouter.post('/ticket-list/:id_user/close/:ticket_id', async(req, res) => {
     const { id_user, ticket_id } = req.params
-    const deletedTicket = await Ticket.deleteOne($and[{ ID: id_user }, { ticket_id: ticket_id }]).catch(err => res.status(400).send(err.message))
-    res.status(200).send(deletedItem)
+    const closedTicket = await Ticket.updateOne({ ticket_id: ticket_id }, { $set: { tag: 'CLOSED' } }).catch(err => res.status(400).send(err.message))
+    res.status(200).send(closedTicket)
 })
 
 //GET Escalated Ticket List for SPV
