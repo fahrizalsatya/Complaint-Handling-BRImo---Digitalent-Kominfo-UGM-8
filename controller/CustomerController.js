@@ -48,13 +48,15 @@ CustomerRouter.post('/signup', async(req, res) => {
                         console.log('Hello,\n\n' + 'Please verify your account by clicking the link: \nhttp:\/\/' + req.headers.host + '\/api\/customer\/verify\/' + customer.email + '\/' + token.token)
 
                         //Show in Postman Only
-                        res.status(200).send('Hello,\n\n' + 'Please verify your account by clicking the link: \nhttp:\/\/' + req.headers.host + '\/api\/customer\/verify\/' + customer.email + '\/' + token.token)
-                            // Send the email
-                        var transporter = nodemailer.createTransport({ service: 'Sendgrid', auth: { user: process.env.MAIL, pass: process.env.PASS } });
+                        //res.status(200).send('Hello,\n\n' + 'Please verify your account by clicking the link: \nhttp:\/\/' + req.headers.host + '\/api\/customer\/verify\/' + customer.email + '\/' + token.token)
+
+                        // Send the email
+                        var transporter = nodemailer.createTransport({ name: 'no-reply@BRImo.com', host: 'smtp.ethereal.email', port: 587, auth: { user: process.env.MAIL, pass: process.env.PASS } });
                         var mailOptions = { from: process.env.MAIL, to: customer.email, subject: 'Account Verification Token', text: 'Hello,\n\n' + 'Please verify your account by clicking the link: \nhttp:\/\/' + req.headers.host + '\/api\/customer\/verify\/' + customer.email + '\/' + token.token };
                         transporter.sendMail(mailOptions, function(err) {
                             if (err) { return res.status(500).send({ msg: err.message }); }
                             res.status(200).send('A verification email has been sent to ' + customer.email + '.');
+                            //res.status(200).send('A verification email has been sent to ' + customer.email + '.\n', 'Message sent: %s', info.messageId + '\n' + 'Preview URL: %s', nodemailer.getTestMessageUrl(info));
                         });
                     });
                 })
@@ -78,18 +80,19 @@ CustomerRouter.post('/resend', async(req, res) => {
         console.log('Hello,\n\n' + 'Please verify your account by clicking the link: \nhttp:\/\/' + req.headers.host + '\/api\/customer\/verify\/' + customer.email + '\/' + token.token)
 
         //Show in Postman only
-        res.status(200).send('Hello,\n\n' + 'Please verify your account by clicking the link: \nhttp:\/\/' + req.headers.host + '\/api\/customer\/verify\/' + customer.email + '\/' + token.token)
+        //res.status(200).send('Hello,\n\n' + 'Please verify your account by clicking the link: \nhttp:\/\/' + req.headers.host + '\/api\/customer\/verify\/' + customer.email + '\/' + token.token)
 
         // Save the token
         token.save(function(err) {
             if (err) { return res.status(500).send({ msg: err.message }); }
 
             // Send the email
-            var transporter = nodemailer.createTransport({ service: 'Sendgrid', auth: { user: process.env.MAIL, pass: process.env.PASS } });
+            var transporter = nodemailer.createTransport({ name: 'no-reply@BRImo.com', host: 'smtp.ethereal.email', port: 587, auth: { user: process.env.MAIL, pass: process.env.PASS } });
             var mailOptions = { from: process.env.MAIL, to: customer.email, subject: 'Account Verification Token', text: 'Hello,\n\n' + 'Please verify your account by clicking the link: \nhttp:\/\/' + req.headers.host + '\/api\/customer\/verify\/' + customer.email + '\/' + token.token };
             transporter.sendMail(mailOptions, function(err) {
                 if (err) { return res.status(500).send({ msg: err.message }); }
-                res.status(200).send('A verification email has been sent to ' + customer.email + '.');
+                res.status(200).send('A verification email has been sent to ' + customer.email + '.')
+                    //res.status(200).send('A verification email has been sent to ' + customer.email + '.\n', 'Message sent: %s', info.messageId + '\n' + 'Preview URL: %s', nodemailer.getTestMessageUrl(info));
             });
         });
 
@@ -185,18 +188,19 @@ CustomerRouter.post('/forgot-password', async(req, res) => {
         console.log(customer)
 
         //Show in Postman only
-        res.status(200).send(newPassword)
+        //res.status(200).send(newPassword)
 
         // Save the New Password
         customer.save(function(err) {
             if (err) { return res.status(500).send({ msg: err.message }); }
 
             // Send the email contain new password
-            var transporter = nodemailer.createTransport({ service: 'Sendgrid', auth: { user: process.env.MAIL, pass: process.env.PASS } });
+            var transporter = nodemailer.createTransport({ name: 'no-reply@BRImo.com', host: 'smtp.ethereal.email', port: 587, auth: { user: process.env.MAIL, pass: process.env.PASS } });
             var mailOptions = { from: process.env.MAIL, to: customer, subject: 'Changed Password', text: 'Hello,\n\n' + 'Please input your changed password account by input this new password: ' + newPassword + '.\n' };
             transporter.sendMail(mailOptions, function(err) {
                 if (err) { return res.status(500).send({ msg: err.message }); }
                 res.status(200).send('A Changed Password has been sent to ' + customer + '.');
+                //res.status(200).send('A Changed Password has been sent to ' + customer.email + '.\n', 'Message sent: %s', info.messageId + '\n' + 'Preview URL: %s', nodemailer.getTestMessageUrl(info));
             });
         });
 
@@ -248,12 +252,6 @@ CustomerRouter.post('/change-password', async(req, res) => {
     } catch (error) {
         res.status(500).json({ error: error })
     }
-})
-
-//CLOSE TICKET
-//POST api/customer/ticket-list/close/:id
-CustomerRouter.post('/ticket-list/close/:id', async(req, res) => {
-
 })
 
 export default CustomerRouter

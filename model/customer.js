@@ -28,6 +28,8 @@ const customerSchema = mongoose.Schema({
         type: Boolean,
         default: false
     }
+}, {
+    timestamps: true,
 })
 
 const Customer = mongoose.model('Customer', customerSchema)

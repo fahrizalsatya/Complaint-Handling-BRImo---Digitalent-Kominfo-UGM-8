@@ -15,6 +15,8 @@ const secretSchema = new mongoose.Schema({
         default: Date.now(),
         expires: 600,
     },
+}, {
+    timestamps: true,
 })
 
 const secretCode = mongoose.model('secretCode', secretSchema)

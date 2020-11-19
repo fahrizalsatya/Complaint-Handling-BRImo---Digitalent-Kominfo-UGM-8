@@ -58,12 +58,12 @@ ticketRouter.get('/ticket-list/search', async(req, res) => {
 })
 
 //CLOSE TICKET
-//POST api/customer/ticket-list/close/:id
-//POST api/spv/ticket-list/close/:id
-//POST api/cs/ticket-list/close/:id
+//POST api/customer/my-ticket/:id_user/close
+//POST api/spv/my-ticket/:id_user/close
+//POST api/cs/my-ticket/:id_user/close
 ticketRouter.post('/my-ticket/:id_user/close', async(req, res) => {
-    const { ticket_id } = req.body
-    const closedTicket = await Ticket.updateOne({ ticket_id: ticket_id }, { $set: { tag: 'CLOSED' } }).catch(err => res.status(400).send(err.message))
+    const { id_ticket } = req.body
+    const closedTicket = await Ticket.updateOne({ id_ticket: id_ticket }, { $set: { tag: 'CLOSED' } }).catch(err => res.status(400).send(err.message))
     res.status(200).send(closedTicket)
 })
 
