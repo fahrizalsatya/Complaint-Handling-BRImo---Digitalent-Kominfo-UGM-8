@@ -7,6 +7,7 @@ import jwt from 'jsonwebtoken'
 import Config from '../config/config.js'
 import secretCode from '../model/secretCode.js'
 import nodemailer from 'nodemailer'
+import generator from 'generate-password'
 
 const CustomerRouter = express.Router()
 
@@ -62,6 +63,7 @@ CustomerRouter.post('/signup', async(req, res) => {
 })
 
 //SEND MAIL
+// api/customer/resend
 CustomerRouter.post('/resend', async(req, res) => {
     Customer.findOne({ email: req.body.email }, function(err, customer) {
         if (!customer) return res.status(400).send({ msg: 'We were unable to find a user with that email.' });
@@ -89,7 +91,7 @@ CustomerRouter.post('/resend', async(req, res) => {
 })
 
 //Verify
-//GET /api/customer/verify
+//POST /api/customer/verify/:email/:token
 CustomerRouter.post('/verify/:email/:token', async(req, res) => {
     // Find a matching token
     secretCode.findOne({ token: req.params.token }, function(err, token) {
@@ -111,6 +113,7 @@ CustomerRouter.post('/verify/:email/:token', async(req, res) => {
 });
 
 //Login endpoint untuk customer
+// /api/customer/login
 CustomerRouter.post('/login', async(req, res) => {
     try {
         const { email, password } = req.body
@@ -142,6 +145,94 @@ CustomerRouter.post('/login', async(req, res) => {
         } else {
             res.status(201).json({
                 "status": "Username not found"
+            })
+        }
+    } catch (error) {
+        res.status(500).json({ error: error })
+    }
+})
+
+//FORGOT PASSWORD
+//POST api/customer/forgot-password
+CustomerRouter.post('/forgot-password', async(req, res) => {
+    Customer.findOne({ email: req.body.email }, async(err, customer) => {
+        if (!customer) return res.status(400).send({ msg: 'We were unable to find a user with that email.' });
+        if (customer.isVerified === false) return res.status(400).send({ msg: 'This account has not been verified. Please verify.' });
+
+        //Generate New Password
+        var newPassword = generator.generate({
+            length: 8,
+            numbers: true,
+            uppercase: true,
+            lowercase: true
+
+        })
+
+        // Hashed Password
+        var saltRounds = 12
+        const hashedPassword = await bcrypt.hash(newPassword, saltRounds)
+
+        //Changed Hashed Password
+        customer.password = hashedPassword
+        console.log(newPassword)
+        console.log(customer.password)
+        console.log(customer)
+
+        // Save the New Password
+        customer.save(function(err) {
+            if (err) { return res.status(500).send({ msg: err.message }); }
+
+            // Send the email contain new password
+            var transporter = nodemailer.createTransport({ service: 'Sendgrid', auth: { user: process.env.MAIL, pass: process.env.PASS } });
+            var mailOptions = { from: process.env.MAIL, to: customer, subject: 'Changed Password', text: 'Hello,\n\n' + 'Please input your changed password account by input this new password: ' + newPassword + '.\n' };
+            transporter.sendMail(mailOptions, function(err) {
+                if (err) { return res.status(500).send({ msg: err.message }); }
+                res.status(200).send('A Changed Password has been sent to ' + customer + '.');
+            });
+        });
+
+    });
+})
+
+//CHANGE PASSWORD
+//POST /api/customer/change-password
+CustomerRouter.post('/change-password', async(req, res) => {
+    try {
+        const { email, password, newPassword } = req.body
+        const currentCustomer = await new Promise((resolve, reject) => {
+            Customer.find({ "email": email }, function(err, customer) {
+                if (err) reject(err)
+                resolve(customer)
+            })
+        })
+        if (currentCustomer[0]) {
+            bcrypt.compare(password, currentCustomer[0].password).then(async(result, err) => {
+                if (result) {
+                    if (err) return res.status(500).send("Terdapat masalah saat registering user")
+                    const customer = currentCustomer[0]
+
+                    // Hashed Password
+                    var saltRounds = 12
+                    const hashedPassword = await bcrypt.hash(newPassword, saltRounds)
+
+                    //Changed Hashed Password
+                    customer.password = hashedPassword
+                    console.log(customer.newPassword)
+                    console.log(customer.password)
+                    console.log(customer)
+
+                    customer.save()
+
+                    res.status(200).send({ "status": "Successfully Changed Pasword!!" })
+                } else {
+                    res.status(201).json({
+                        "status": "wrong password"
+                    })
+                }
+            })
+        } else {
+            res.status(201).json({
+                "status": "email not found"
             })
         }
     } catch (error) {
