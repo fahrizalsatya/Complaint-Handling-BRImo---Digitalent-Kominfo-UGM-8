@@ -250,4 +250,10 @@ CustomerRouter.post('/change-password', async(req, res) => {
     }
 })
 
+//CLOSE TICKET
+//POST api/customer/ticket-list/close/:id
+CustomerRouter.post('/ticket-list/close/:id', async(req, res) => {
+
+})
+
 export default CustomerRouter
