@@ -24,17 +24,17 @@ ticketRouter.get('/ticket-list/unread', async(req, res) => {
 })
 
 //PUT Claim ticket
-ticketRouter.put('/pickticket', async(req,res)=>{
-    const [idTicket , idCS]= req.body
-    const ticket= Ticket.findById(idTicket)
+ticketRouter.put('/pickticket', async(req, res) => {
+    const [idTicket, idCS] = req.body
+    const ticket = Ticket.findById(idTicket)
     if (ticket) {
         Ticket.aggregate([{
-            $replaceWith: {assigned_to:{idCS}}
+            $replaceWith: { assigned_to: { idCS } }
         }])
 
-        const updateTicket= await ticket.save()
+        const updateTicket = await ticket.save()
         res.json(updateTicket)
-    } else{
+    } else {
         res.send("Update ticket failed")
     }
 })
@@ -61,8 +61,8 @@ ticketRouter.get('/ticket-list/search', async(req, res) => {
 //POST api/customer/ticket-list/close/:id
 //POST api/spv/ticket-list/close/:id
 //POST api/cs/ticket-list/close/:id
-ticketRouter.post('/ticket-list/:id_user/close/:ticket_id', async(req, res) => {
-    const { id_user, ticket_id } = req.params
+ticketRouter.post('/my-ticket/:id_user/close', async(req, res) => {
+    const { ticket_id } = req.body
     const closedTicket = await Ticket.updateOne({ ticket_id: ticket_id }, { $set: { tag: 'CLOSED' } }).catch(err => res.status(400).send(err.message))
     res.status(200).send(closedTicket)
 })
