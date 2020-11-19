@@ -5,6 +5,10 @@ const ticketSchema = mongoose.Schema({
         type: String,
         required: true
     },
+    ticket_id: {
+        type: String,
+        required: true
+    },
     description: {
         type: String,
         required: true
@@ -22,8 +26,14 @@ const ticketSchema = mongoose.Schema({
         required: false
     },
     assigned_to: {
-        type: String,
-        required: true
+        type: mongoose.Schema.Types.ObjectId,
+        required: true,
+        refpath: 'onModel'
+    },
+    onModel: {
+        type: mongoose.Schema.Types.ObjectId,
+        required: true,
+        enum: ['Supervisor', 'Customer_Services']
     },
     tag: {
         type: String,
@@ -34,8 +44,9 @@ const ticketSchema = mongoose.Schema({
         required: true
     },
     id_cust: {
-        type: String,
-        required: true
+        type: mongoose.Schema.Types.ObjectId,
+        required: true,
+        ref: 'Customer'
     },
 }, {
     timestamps: true,
