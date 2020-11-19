@@ -47,7 +47,7 @@ SpvRouter.post('/login', async(req, res) => {
 })
 
 //GET Escalated Ticket List for SPV
-SpvRouter.get('/ticketlist', async(req, res) => {
+SpvRouter.get('/ticket-list/escalated', async(req, res) => {
     const tickets = await Ticket.aggregate({
         $match: { tag: 'ESCALATED' }
     })
@@ -59,7 +59,7 @@ SpvRouter.get('/ticketlist', async(req, res) => {
 })
 
 //GET Escalated Ticket List by Category for SPV
-SpvRouter.get('/ticketlist/:category', async(req, res) => {
+SpvRouter.get('/ticket-list/escalated/:category', async(req, res) => {
     const tickets = await Ticket.aggregate(
         [{
                 $match: { tag: 'ESCALATED' }
