@@ -81,4 +81,17 @@ SpvRouter.post('/add-cs', async(req, res) => {
     }
 })
 
+//GET CS profile
+SpvRouter.get('/cs/profile/id', async(req,res)=>{
+    const csProfile= await CustService.findById(req.query.id)
+    if (csProfile) {
+        res.status(200).json(csProfile)
+    }else{
+        res.status(201).json({
+            message: "CS not found"
+        })
+    }
+
+})
+
 export default SpvRouter

@@ -16,9 +16,10 @@ ticketRouter.get('/ticket-list/unread', async(req, res) => {
         { $match: { status: "UNREAD" } }
     ])
     if (tickets != null) {
-        res.json(tickets)
+        res.status(200).json(tickets)
     } else {
-        res.send("Ticket is empty")
+        res.status(201).json({
+            message: "Ticket is empty"})
     }
 })
 
@@ -32,9 +33,11 @@ ticketRouter.put('/get-ticket', async(req, res) => {
         }])
 
         const updateTicket = await ticket.save()
-        res.json(updateTicket)
+        res.status(200).json(updateTicket)
     } else {
-        res.send("Update ticket failed")
+        res.status(201).json({
+            message: "Update ticket failed"
+        })
     }
 })
 

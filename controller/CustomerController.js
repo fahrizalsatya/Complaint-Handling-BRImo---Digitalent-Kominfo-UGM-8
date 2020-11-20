@@ -256,12 +256,14 @@ CustomerRouter.post('/change-password', async(req, res) => {
 })
 
 //GET CS profile
-CustomerRouter.get('/csProfile/id', async(req,res)=>{
+CustomerRouter.get('/cs/profile/id', async(req,res)=>{
     const csProfile= await CustService.findById(req.query.id,{pub_name:1, pub_photo:1})
     if (csProfile) {
-        res.json(csProfile)
+        res.status(200).json(csProfile)
     }else{
-        res.json("CS not found")
+        res.status(201).json({
+            message: "CS not found"
+        })
     }
 
 })
