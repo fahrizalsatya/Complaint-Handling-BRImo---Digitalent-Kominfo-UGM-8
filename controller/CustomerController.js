@@ -38,26 +38,26 @@ CustomerRouter.post('/signup', async(req, res) => {
                 // Create and save the customer
                 customer.save(function(err) {
                     if (err) {
-                        return res.status(500).send({ msg: err.message });
+                        return res.status(500).json({ msg: err.message });
                     }
                     // Create a verification token for this customer
                     var token = new secretCode({ _custId: customer._id, token: crypto.randomBytes(16).toString('hex') });
                     console.log(token)
                         // Save the verification token
                     token.save(function(err) {
-                        if (err) { return res.status(500).send({ msg: err.message }); }
+                        if (err) { return res.status(500).json({ msg: err.message }); }
                         console.log('Hello,\n\n' + 'Please verify your account by clicking the link: \nhttp:\/\/' + req.headers.host + '\/api\/customer\/verify\/' + customer.email + '\/' + token.token)
 
                         //Show in Postman Only
-                        //res.status(200).send('Hello,\n\n' + 'Please verify your account by clicking the link: \nhttp:\/\/' + req.headers.host + '\/api\/customer\/verify\/' + customer.email + '\/' + token.token)
+                        //res.status(200).json('Hello,\n\n' + 'Please verify your account by clicking the link: \nhttp:\/\/' + req.headers.host + '\/api\/customer\/verify\/' + customer.email + '\/' + token.token)
 
                         // Send the email
                         var transporter = nodemailer.createTransport({ name: 'no-reply@BRImo.com', host: 'smtp.ethereal.email', port: 587, auth: { user: process.env.MAIL, pass: process.env.PASS } });
                         var mailOptions = { from: process.env.MAIL, to: customer.email, subject: 'Account Verification Token', text: 'Hello,\n\n' + 'Please verify your account by clicking the link: \nhttp:\/\/' + req.headers.host + '\/api\/customer\/verify\/' + customer.email + '\/' + token.token };
                         transporter.sendMail(mailOptions, function(err) {
-                            if (err) { return res.status(500).send({ msg: err.message }); }
-                            res.status(200).send('A verification email has been sent to ' + customer.email + '.');
-                            //res.status(200).send('A verification email has been sent to ' + customer.email + '.\n', 'Message sent: %s', info.messageId + '\n' + 'Preview URL: %s', nodemailer.getTestMessageUrl(info));
+                            if (err) { return res.status(500).json({ msg: err.message }); }
+                            res.status(200).json('A verification email has been sent to ' + customer.email + '.');
+                            //res.status(200).json('A verification email has been sent to ' + customer.email + '.\n', 'Message sent: %s', info.messageId + '\n' + 'Preview URL: %s', nodemailer.getTestMessageUrl(info));
                         });
                     });
                 })
@@ -72,8 +72,8 @@ CustomerRouter.post('/signup', async(req, res) => {
 // api/customer/resend
 CustomerRouter.post('/resend', async(req, res) => {
     Customer.findOne({ email: req.body.email }, function(err, customer) {
-        if (!customer) return res.status(400).send({ msg: 'We were unable to find a user with that email.' });
-        if (customer.isVerified) return res.status(400).send({ msg: 'This account has already been verified. Please log in.' });
+        if (!customer) return res.status(201).json({ msg: 'We were unable to find a user with that email.' });
+        if (customer.isVerified) return res.status(201).json({ msg: 'This account has already been verified. Please log in.' });
 
         // Create a verification token, save it, and send email
         var token = new secretCode({ _custId: customer._id, token: crypto.randomBytes(16).toString('hex') });
@@ -81,19 +81,19 @@ CustomerRouter.post('/resend', async(req, res) => {
         console.log('Hello,\n\n' + 'Please verify your account by clicking the link: \nhttp:\/\/' + req.headers.host + '\/api\/customer\/verify\/' + customer.email + '\/' + token.token)
 
         //Show in Postman only
-        //res.status(200).send('Hello,\n\n' + 'Please verify your account by clicking the link: \nhttp:\/\/' + req.headers.host + '\/api\/customer\/verify\/' + customer.email + '\/' + token.token)
+        //res.status(200).json('Hello,\n\n' + 'Please verify your account by clicking the link: \nhttp:\/\/' + req.headers.host + '\/api\/customer\/verify\/' + customer.email + '\/' + token.token)
 
         // Save the token
         token.save(function(err) {
-            if (err) { return res.status(500).send({ msg: err.message }); }
+            if (err) { return res.status(500).json({ msg: err.message }); }
 
             // Send the email
             var transporter = nodemailer.createTransport({ name: 'no-reply@BRImo.com', host: 'smtp.ethereal.email', port: 587, auth: { user: process.env.MAIL, pass: process.env.PASS } });
             var mailOptions = { from: process.env.MAIL, to: customer.email, subject: 'Account Verification Token', text: 'Hello,\n\n' + 'Please verify your account by clicking the link: \nhttp:\/\/' + req.headers.host + '\/api\/customer\/verify\/' + customer.email + '\/' + token.token };
             transporter.sendMail(mailOptions, function(err) {
-                if (err) { return res.status(500).send({ msg: err.message }); }
-                res.status(200).send('A verification email has been sent to ' + customer.email + '.')
-                    //res.status(200).send('A verification email has been sent to ' + customer.email + '.\n', 'Message sent: %s', info.messageId + '\n' + 'Preview URL: %s', nodemailer.getTestMessageUrl(info));
+                if (err) { return res.status(500).json({ msg: err.message }); }
+                res.status(200).json('A verification email has been sent to ' + customer.email + '.')
+                    //res.status(200).json('A verification email has been sent to ' + customer.email + '.\n', 'Message sent: %s', info.messageId + '\n' + 'Preview URL: %s', nodemailer.getTestMessageUrl(info));
             });
         });
 
@@ -105,18 +105,18 @@ CustomerRouter.post('/resend', async(req, res) => {
 CustomerRouter.post('/verify/:email/:token', async(req, res) => {
     // Find a matching token
     secretCode.findOne({ token: req.params.token }, function(err, token) {
-        if (!token) return res.status(400).send({ type: 'not-verified', msg: 'We were unable to find a valid token. Your token my have expired.' });
+        if (!token) return res.status(201).json({ type: 'not-verified', msg: 'We were unable to find a valid token. Your token my have expired.' });
 
         // If we found a token, find a matching user
         Customer.findOne({ _id: token._custId, email: req.params.email }, function(err, customer) {
-            if (!customer) return res.status(400).send({ msg: 'We were unable to find a user for this token.' });
-            if (customer.isVerified) return res.status(400).send({ type: 'already-verified', msg: 'This user has already been verified.' });
+            if (!customer) return res.status(201).json({ msg: 'We were unable to find a user for this token.' });
+            if (customer.isVerified) return res.status(201).json({ type: 'already-verified', msg: 'This user has already been verified.' });
 
             // Verify and save the user
             customer.isVerified = true;
             customer.save(function(err) {
-                if (err) { return res.status(500).send({ msg: err.message }); }
-                res.status(200).send("The account has been verified. Please log in.");
+                if (err) { return res.status(500).json({ msg: err.message }); }
+                res.status(200).json("The account has been verified. Please log in.");
             });
         });
     });
@@ -137,15 +137,15 @@ CustomerRouter.post('/login', async(req, res) => {
         if (currentCustomer[0]) {
             bcrypt.compare(password, currentCustomer[0].password).then(function(result, err) {
                 if (result) {
-                    if (err) return res.status(500).send("Terdapat masalah saat registering user")
+                    if (err) return res.status(201).json("Terdapat masalah saat registering user")
                     else if (currentCustomer[0].isVerified === false) {
-                        return res.status(500).send("Please Verify your account")
+                        return res.status(201).json("Please Verify your account")
                     }
                     const customer = currentCustomer[0]
                     var token = jwt.sign({ customer }, Config.secret, {
                         expiresIn: '1m'
                     })
-                    res.status(200).send({ auth: true, "status": "Success!!", token: token })
+                    res.status(200).json({ auth: true, "status": "Success!!", token: token })
                 } else {
                     res.status(201).json({
                         "status": "wrong password"
@@ -166,8 +166,8 @@ CustomerRouter.post('/login', async(req, res) => {
 //POST api/customer/forgot-password
 CustomerRouter.post('/forgot-password', async(req, res) => {
     Customer.findOne({ email: req.body.email }, async(err, customer) => {
-        if (!customer) return res.status(400).send({ msg: 'We were unable to find a user with that email.' });
-        if (customer.isVerified === false) return res.status(400).send({ msg: 'This account has not been verified. Please verify.' });
+        if (!customer) return res.status(201).json({ msg: 'We were unable to find a user with that email.' });
+        if (customer.isVerified === false) return res.status(201).json({ msg: 'This account has not been verified. Please verify.' });
 
         //Generate New Password
         var newPassword = generator.generate({
@@ -189,19 +189,19 @@ CustomerRouter.post('/forgot-password', async(req, res) => {
         console.log(customer)
 
         //Show in Postman only
-        //res.status(200).send(newPassword)
+        //res.status(200).json(newPassword)
 
         // Save the New Password
         customer.save(function(err) {
-            if (err) { return res.status(500).send({ msg: err.message }); }
+            if (err) { return res.status(500).json({ msg: err.message }); }
 
             // Send the email contain new password
             var transporter = nodemailer.createTransport({ name: 'no-reply@BRImo.com', host: 'smtp.ethereal.email', port: 587, auth: { user: process.env.MAIL, pass: process.env.PASS } });
-            var mailOptions = { from: process.env.MAIL, to: customer, subject: 'Changed Password', text: 'Hello,\n\n' + 'Please input your changed password account by input this new password: ' + newPassword + '.\n' };
+            var mailOptions = { from: process.env.MAIL, to: customer.email, subject: 'Changed Password', text: 'Hello,\n\n' + 'Please input your changed password account by input this new password: ' + newPassword + '.\n' };
             transporter.sendMail(mailOptions, function(err) {
-                if (err) { return res.status(500).send({ msg: err.message }); }
-                res.status(200).send('A Changed Password has been sent to ' + customer + '.');
-                //res.status(200).send('A Changed Password has been sent to ' + customer.email + '.\n', 'Message sent: %s', info.messageId + '\n' + 'Preview URL: %s', nodemailer.getTestMessageUrl(info));
+                if (err) { return res.status(500).json({ msg: err.message }); }
+                res.status(200).send('A Changed Password has been sent to ' + customer.email + '.');
+                //res.status(200).json('A Changed Password has been sent to ' + customer.email + '.\n', 'Message sent: %s', info.messageId + '\n' + 'Preview URL: %s', nodemailer.getTestMessageUrl(info));
             });
         });
 
@@ -222,7 +222,7 @@ CustomerRouter.post('/change-password', async(req, res) => {
         if (currentCustomer[0]) {
             bcrypt.compare(password, currentCustomer[0].password).then(async(result, err) => {
                 if (result) {
-                    if (err) return res.status(500).send("Terdapat masalah saat registering user")
+                    if (err) return res.status(201).json("Terdapat masalah saat registering user")
                     const customer = currentCustomer[0]
 
                     // Hashed Password
@@ -238,7 +238,7 @@ CustomerRouter.post('/change-password', async(req, res) => {
                     //Save New Password
                     customer.save()
 
-                    res.status(200).send({ "status": "Successfully Changed Pasword!!" })
+                    res.status(200).json({ "status": "Successfully Changed Pasword!!" })
                 } else {
                     res.status(201).json({
                         "status": "wrong password"
@@ -261,7 +261,7 @@ CustomerRouter.get('/csProfile/id', async(req,res)=>{
     if (csProfile) {
         res.json(csProfile)
     }else{
-        res.send("CS not found")
+        res.json("CS not found")
     }
 
 })

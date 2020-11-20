@@ -1,7 +1,7 @@
 import express from 'express'
 import bodyParser from 'body-parser'
 import Supervisor from '../model/spv.js'
-import Supervisor from '../model/cs.js'
+import CustService from '../model/cs.js'
 import bcrypt from 'bcrypt'
 import jwt from 'jsonwebtoken'
 import Config from '../config/config.js'
@@ -49,7 +49,7 @@ SpvRouter.post('/login', async(req, res) => {
 
 //Mendaftarkan CS
 //POST /api/spv/add-cs
-spvRouter.post('/add-cs', async(req, res) => {
+SpvRouter.post('/add-cs', async(req, res) => {
     try {
         const { name, personal_id, email, password, photo, pub_name, pub_photo, final_rating } = req.body
         const csAccount = await CustService.findOne({ email })

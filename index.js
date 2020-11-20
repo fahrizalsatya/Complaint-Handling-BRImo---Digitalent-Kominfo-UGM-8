@@ -5,6 +5,7 @@ import CustomerRouter from './controller/CustomerController.js'
 import csRouter from './controller/CsController.js'
 import SpvRouter from './controller/SpvController.js'
 import ticketRouter from './controller/TicketController.js'
+import cors from 'cors'
 
 import dotenv from 'dotenv'
 dotenv.config()
@@ -23,6 +24,7 @@ mongoose.connect(process.env.MONGODB_URI, {
 
 app.use(morgan('dev'))
 app.use(express.json())
+app.use(cors())
 
 app.get('/', (req, res) => {
     res.json({
