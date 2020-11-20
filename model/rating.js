@@ -2,8 +2,9 @@ import mongoose from 'mongoose'
 
 const ratingSchema = mongoose.Schema({
     id_ticket: {
-        type: String,
-        required: true
+        type: mongoose.Schema.Types.ObjectId,
+        required: true,
+        ref: 'Ticket'
     },
     id_cs: {
         type: String,

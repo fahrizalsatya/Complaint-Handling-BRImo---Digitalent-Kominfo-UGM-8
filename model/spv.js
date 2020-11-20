@@ -5,6 +5,10 @@ const spvSchema = mongoose.Schema({
         type: String,
         required: true
     },
+    personal_id: {
+        type: String,
+        required: true
+    },
     email: {
         type: String,
         required: true

@@ -24,7 +24,7 @@ ticketRouter.get('/ticket-list/unread', async(req, res) => {
 })
 
 //PUT Claim ticket
-ticketRouter.put('/pickticket', async(req, res) => {
+ticketRouter.put('/get-ticket', async(req, res) => {
     //const [idTicket, idCS] = req.body
     const ticket = Ticket.findById(req.query.id_ticket)
     if (ticket) {
@@ -61,7 +61,7 @@ ticketRouter.get('/ticket-list/search', async(req, res) => {
 //POST api/customer/my-ticket/:id_user/close
 //POST api/spv/my-ticket/:id_user/close
 //POST api/cs/my-ticket/:id_user/close
-ticketRouter.post('/my-ticket/:id_user/close', async(req, res) => {
+ticketRouter.post('/my-ticket/:id_ticket/close', async(req, res) => {
     const { id_ticket } = req.body
     const closedTicket = await Ticket.updateOne({ id_ticket: id_ticket }, { $set: { tag: 'CLOSED' } }).catch(err => res.status(400).send(err.message))
     res.status(200).send(closedTicket)

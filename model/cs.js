@@ -13,6 +13,10 @@ const cserviceSchema = mongoose.Schema({
         type: String,
         required: true
     },
+    personal_id: {
+        type: String,
+        required: true
+    },
     photo: {
         type: String,
         required: true
@@ -27,7 +31,7 @@ const cserviceSchema = mongoose.Schema({
     },
     final_rating: {
         type: Number,
-        required: true
+        required: false
     },
 }, {
     timestamps: true,
