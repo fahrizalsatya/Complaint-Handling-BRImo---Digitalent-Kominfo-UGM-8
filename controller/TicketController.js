@@ -13,14 +13,13 @@ ticketRouter.post('/init-ticket', async(req, res) => {
 ticketRouter.get('/ticket-list/unread', async(req, res) => {
     // Insert logic here
     const tickets = await Ticket.aggregate([
-        { $match: { status: "unread" } }
+        { $match: { status: "UNREAD" } }
     ])
     if (tickets != null) {
         res.json(tickets)
     } else {
         res.send("Ticket is empty")
     }
-
 })
 
 //PUT Claim ticket
@@ -29,7 +28,7 @@ ticketRouter.put('/get-ticket', async(req, res) => {
     const ticket = Ticket.findById(req.query.id_ticket)
     if (ticket) {
         Ticket.aggregate([{
-            $replaceWith: { assigned_to: String(req.query.id_cs) }
+            $replaceWith: { assigned_to: String(req.query.id_cs), tag: "ON PROGRESS", status: "READ"}
         }])
 
         const updateTicket = await ticket.save()

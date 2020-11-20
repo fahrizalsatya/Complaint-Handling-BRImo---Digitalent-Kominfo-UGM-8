@@ -37,11 +37,14 @@ const ticketSchema = mongoose.Schema({
     },
     tag: {
         type: String,
-        required: true
+        required: true,
+        uppercase: true
     },
     status: {
         type: String,
-        required: true
+        default: "unread",
+        required: true,
+        uppercase: true
     },
     id_cust: {
         type: mongoose.Schema.Types.ObjectId,
