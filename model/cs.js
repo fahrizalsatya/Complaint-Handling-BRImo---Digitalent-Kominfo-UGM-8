@@ -31,7 +31,7 @@ const cserviceSchema = mongoose.Schema({
     },
     final_rating: {
         type: Number,
-        required: true
+        required: false
     },
 }, {
     timestamps: true,
