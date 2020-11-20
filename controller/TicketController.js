@@ -25,11 +25,11 @@ ticketRouter.get('/ticket-list/unread', async(req, res) => {
 
 //PUT Claim ticket
 ticketRouter.put('/pickticket', async(req, res) => {
-    const [idTicket, idCS] = req.body
-    const ticket = Ticket.findById(idTicket)
+    //const [idTicket, idCS] = req.body
+    const ticket = Ticket.findById(req.query.id_ticket)
     if (ticket) {
         Ticket.aggregate([{
-            $replaceWith: { assigned_to: { idCS } }
+            $replaceWith: { assigned_to: String(req.query.id_cs) }
         }])
 
         const updateTicket = await ticket.save()

@@ -8,6 +8,7 @@ import Config from '../config/config.js'
 import secretCode from '../model/secretCode.js'
 import nodemailer from 'nodemailer'
 import generator from 'generate-password'
+import CustService from '../model/cs.js'
 
 const CustomerRouter = express.Router()
 
@@ -252,6 +253,17 @@ CustomerRouter.post('/change-password', async(req, res) => {
     } catch (error) {
         res.status(500).json({ error: error })
     }
+})
+
+//GET CS profile
+CustomerRouter.get('/csProfile/id', async(req,res)=>{
+    const csProfile= await CustService.findById(req.query.id,{pub_name:1, pub_photo:1})
+    if (csProfile) {
+        res.json(csProfile)
+    }else{
+        res.send("CS not found")
+    }
+
 })
 
 export default CustomerRouter
