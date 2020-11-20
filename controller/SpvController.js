@@ -285,4 +285,12 @@ SpvRouter.post('/add-cs', async(req, res) => {
     }
 })
 
+//List Daftar CS
+// GET /api/spv/cs-list
+
+SpvRouter.get('/cs-list',async(req,res)=>{
+    const cslist = await CustService.find({})
+    res.status(200).json(cslist)
+})
+
 export default SpvRouter
