@@ -70,25 +70,25 @@ ticketRouter.get('/lists', async(req, res) => {
    if (!token)
       return res.status(401).send({ auth: false, message: 'Tidak ada token yang diberikan!' })
    
-   JWT.verify(token, Config.secret, async(err, decode) => {
+      JWT.verify(token, Config.secret, async(err, decode) => {
       if (err)
          return res.status(500).send({ auth: false, message: 'Failed to authenticate token!' })
       
-      const id_cust = decode.customer._id
-      const listTicketCust = await Ticket.find({
+         const id_cust = decode.customer._id
+         const listTicketCust = await Ticket.find({
          id_cust, tag: { $ne: 'Closed' }
-      }, {
-         _id: 1,
-         id_ticket: 1,
-         complaint_name: 1,
-         tag: 1,
-         status: 1
-      })
+            }, {
+            _id: 1,
+            id_ticket: 1,
+            complaint_name: 1,
+            tag: 1,
+            status: 1
+            })
       
-      if(listTicketCust && listTicketCust.length !==0)
-         res.status(200).json(listTicketCust)
-      else
-         res.status(404).json({ message: 'Anda belum membuat tiket komplain'})
+            if(listTicketCust && listTicketCust.length !==0)
+             res.status(200).json(listTicketCust)
+             else
+                res.status(404).json({ message: 'Anda belum membuat tiket komplain'})
    })
 })
 
@@ -142,33 +142,53 @@ ticketRouter.put('/:id/rate', async(req, res) => {
 //ticket list unread for CS
 //GET api/cs/tickets/ticket-list/unread
 ticketRouter.get('/ticket-list/unread', async(req, res) => {
-    // Insert logic here
-    const tickets = await Ticket.aggregate([
-        { $match: { status: "UNREAD" } }
-    ])
-    if (tickets != null) {
-        res.status(200).json(tickets)
-    } else {
-        res.status(201).json({
-            message: "Ticket is empty"})
-    }
+    var token = req.headers['x-access-token']
+    if (!token) {
+       return res.status(401).send({ auth: false, message: 'Tidak ada token yang diberikan!' })
+      }
+      JWT.verify(token, Config.secret, async(err, decode) =>{
+         if (err) {
+            return res.status(500).send({ auth: false, message: 'Failed to authenticate token!' })
+         }
+         const tickets = await Ticket.aggregate([
+            { $match: { status: "UNREAD" } }
+        ])
+        if (tickets != null) {
+            res.status(200).json(tickets)
+        } else {
+            res.status(201).json({
+                message: "Ticket is empty"})
+        }
+      })
+    
 })
 
-//PUT Claim ticket
-ticketRouter.put('/get-ticket', async(req, res) => {
+//Klaim tiket oleh CS and SPV
+//PUT /api/spv/tickets/ticket_id/get-ticket
+//PUT /api/cs/tickets/ticket_id/get-ticket
+ticketRouter.put('/ticket_id/get-ticket', async(req, res) => {
     //const [idTicket, idCS] = req.body
-    const ticket = await Ticket.findById(req.query.id_ticket)
-    if (ticket) {
-      ticket.assigned_to = String(req.query.id_cs),
-      ticket.tag = "ON PROGRESS",
-      ticket.status= "READ"
-        const updateTicket = await ticket.save()
-        res.status(200).json(updateTicket)
-    } else {
-        res.status(201).send({
-            message: "Update ticket failed"
-        })
-    }
+    var token = req.headers['x-access-token']
+    if (!token) {
+       return res.status(401).send({ auth: false, message: 'Tidak ada token yang diberikan!' })
+      }
+      JWT.verify(token, Config.secret, async(err, decode) =>{
+         if (err) {
+            return res.status(500).send({ auth: false, message: 'Failed to authenticate token!' })
+         }
+         const ticket = await Ticket.findById(req.query.ticket_id)
+          if (ticket) {
+             ticket.assigned_to = decode.customer.name,
+             ticket.tag = "ON PROGRESS",
+             ticket.status= "READ"
+             const updateTicket = await ticket.save()
+             res.status(200).json(updateTicket)
+            } else {
+               res.status(201).json({
+                  message: "Update ticket failed"
+               })
+            }
+         })
 })
 
 //GET Ticket search based on tag and category endpoint
@@ -229,5 +249,55 @@ ticketRouter.post('/my-ticket/:id_ticket/close', async(req, res) => {
 //         res.send("Ticket not found")
 //     }
 // })
+
+//Update tag ticket for CS and SPV
+//PUT /api/spv/tickets/ticket_id/update-tag
+//PUT /api/cs/tickets/ticket_id/update-tag
+ticketRouter.put('/ticket_id/update-tag', async(req,res)=>{
+   var token = req.headers['x-access-token']
+   if (!token) {
+      return res.status(401).send({ auth: false, message: 'Tidak ada token yang diberikan!' })
+     }
+     JWT.verify(token, Config.secret, async(err, decode) =>{
+        if (err) {
+           return res.status(500).send({ auth: false, message: 'Failed to authenticate token!' })
+        }
+        const ticket = await Ticket.findById(req.query.ticket_id)
+        if (ticket) {
+           ticket.tag = String(req.query.tag)
+           const updateTicket= await ticket.save()
+           res.status(200).json(updateTicket)
+        }else{
+         res.status(201).json({
+            message: "Updated ticket tag failed"
+         })
+        }
+      })
+})
+
+//Update category ticket for CS and SPV
+//PUT /api/spv/tickets/ticket_id/update-category
+//PUT /api/cs/tickets/ticket_id/update-category
+ticketRouter.put('/ticket_id/update-category', async(req,res)=>{
+   var token = req.headers['x-access-token']
+   if (!token) {
+      return res.status(401).send({ auth: false, message: 'Tidak ada token yang diberikan!' })
+     }
+     JWT.verify(token, Config.secret, async(err, decode) =>{
+        if (err) {
+           return res.status(500).send({ auth: false, message: 'Failed to authenticate token!' })
+        }
+        const ticket = await Ticket.findById(req.query.ticket_id)
+        if (ticket) {
+           ticket.category = String(req.query.category)
+           const updateTicket= await ticket.save()
+           res.status(200).json(updateTicket)
+        }else{
+         res.status(201).json({
+            message: "Updated ticket category failed"
+         })
+        }
+      })
+})
 
 export default ticketRouter
