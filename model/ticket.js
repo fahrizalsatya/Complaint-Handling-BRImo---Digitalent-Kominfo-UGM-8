@@ -34,15 +34,20 @@ const ticketSchema = mongoose.Schema({
    },
    assigned_to: {
       type: String,
+      default: '-',
       required: true
    },
    tag: {
       type: String,
-      required: true
+      required: true,
+      default:'SUBMITTED',
+      uppercase: true
    },
    status: {
       type: String,
-      required: true
+      required: true,
+      default: 'UNREAD',
+      uppercase:true
    },
    id_cust: {
       type: String,

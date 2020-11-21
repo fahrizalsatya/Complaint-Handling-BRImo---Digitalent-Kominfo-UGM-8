@@ -7,7 +7,8 @@ const spvSchema = mongoose.Schema({
     },
     personal_id: {
         type: String,
-        required: true
+        required: true,
+        unique:true
     },
     email: {
         type: String,

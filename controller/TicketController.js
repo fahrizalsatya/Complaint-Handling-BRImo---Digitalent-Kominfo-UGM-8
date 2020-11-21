@@ -28,16 +28,13 @@ ticketRouter.post('/init_ticket', async(req, res) => {
          if (err)
             return res.status(500).send({ auth: false, message: 'Failed to authenticate token!'})
          
-         const id_ticket = 'T-'+String(random)
+         const ticket_id = 'T-'+String(random)
          const id_cust = decode.customer._id
-         const assigned_to = '-'
-         const tag = 'Submitted'
-         const status = 'Unread'
          const name = categoryName
          const detail = categoryDetail
          
          const createdTicket = new Ticket({
-            id_ticket,
+            ticket_id,
             complaint_name,
             description,
             category: {
@@ -46,14 +43,11 @@ ticketRouter.post('/init_ticket', async(req, res) => {
             },
             screenshot,
             url_video,
-            assigned_to,
-            tag,
-            status,
             id_cust,
          })
 
          const createdRating = new Rating({
-            id_ticket,
+            ticket_id,
             id_cs: '-',
             rating: 0,
          })
@@ -110,7 +104,7 @@ ticketRouter.get('/history', async(req, res) => {
       
       const id_cust = decode.customer._id
       const listTicketCust = await Ticket.find({
-         id_cust, status: 'Closed'
+         id_cust, status: 'CLOSED'
       }, {
          _id: 0,
          id_ticket: 1,
@@ -145,7 +139,8 @@ ticketRouter.put('/:id/rate', async(req, res) => {
    })
 })
 
-//GET ticket list unread
+//ticket list unread for CS
+//GET api/cs/tickets/ticket-list/unread
 ticketRouter.get('/ticket-list/unread', async(req, res) => {
     // Insert logic here
     const tickets = await Ticket.aggregate([
@@ -162,7 +157,7 @@ ticketRouter.get('/ticket-list/unread', async(req, res) => {
 //PUT Claim ticket
 ticketRouter.put('/get-ticket', async(req, res) => {
     //const [idTicket, idCS] = req.body
-    const ticket = Ticket.findById(req.query.id_ticket)
+    const ticket = await Ticket.findById(req.query.id_ticket)
     if (ticket) {
       ticket.assigned_to = String(req.query.id_cs),
       ticket.tag = "ON PROGRESS",
