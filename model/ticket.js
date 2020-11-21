@@ -1,7 +1,11 @@
 import mongoose from 'mongoose'
 
 const ticketSchema = mongoose.Schema({
-   complaint_name: {
+   id_ticket: {
+      type: String,
+      required: true
+  },
+  complaint_name: {
       type: String,
       required: true
    },
@@ -10,8 +14,14 @@ const ticketSchema = mongoose.Schema({
       required: true
    },
    category: {
-      type: String,
-      required: true
+      name: {
+         type: String,
+         required: true
+      },
+      detail: {
+         type: String,
+         required: false
+      }
    },
    screenshot: {
       type: String,
@@ -37,6 +47,8 @@ const ticketSchema = mongoose.Schema({
       type: String,
       required: true
    },
+}, {
+   timestamps: true,
 })
 
 const Ticket = mongoose.model('Ticket', ticketSchema)

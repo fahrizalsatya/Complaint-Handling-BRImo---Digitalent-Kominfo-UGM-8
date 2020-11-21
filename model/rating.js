@@ -7,11 +7,11 @@ const ratingSchema = mongoose.Schema({
    },
    id_cs: {
       type: String,
-      required: true
+      required: false
    },
    rating: {
       type: Number,
-      required: true
+      required: false
    }
 })
 

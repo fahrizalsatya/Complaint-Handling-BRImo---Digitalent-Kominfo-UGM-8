@@ -4,7 +4,7 @@ import Customer from '../model/customer.js'
 import bcrypt from 'bcrypt'
 import jwt from 'jsonwebtoken'
 import Config from '../config/config.js'
-import secretCode from '../config/secretCode.js'
+import secretCode from '../model/secretCode.js'
 
 const CustomerRouter = express.Router()
 
@@ -125,9 +125,9 @@ CustomerRouter.post('/login', async(req, res) => {
                     if (err) return res.status(500).send("Terdapat masalah saat registering user")
                     const customer = currentCustomer[0]
                     var token = jwt.sign({ customer }, Config.secret, {
-                        expiresIn: '1m'
+                        expiresIn: 1800
                     })
-                    res.status(200).send({ auth: true, "status": "Success!!", token: token })
+                    res.status(200).send({ auth: true, status: "Berhasil Login!", token: token })
                 } else {
                     res.status(201).json({
                         "status": "wrong password"
