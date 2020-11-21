@@ -1,34 +1,40 @@
 import mongoose from 'mongoose'
 
 const cserviceSchema = mongoose.Schema({
-    name:{
+    name: {
         type: String,
         required: true
     },
-    email:{
+    email: {
         type: String,
         required: true
     },
-    password:{
+    password: {
         type: String,
         required: true
     },
-    photo:{
+    personal_id: {
         type: String,
         required: true
     },
-    pub_name:{
+    photo: {
         type: String,
         required: true
     },
-    pub_photo:{
+    pub_name: {
         type: String,
         required: true
     },
-    final_rating:{
+    pub_photo: {
+        type: String,
+        required: true
+    },
+    final_rating: {
         type: Number,
-        required: true
+        required: false
     },
+}, {
+    timestamps: true,
 })
 
 const CustService = mongoose.model('Customer_Services', cserviceSchema)

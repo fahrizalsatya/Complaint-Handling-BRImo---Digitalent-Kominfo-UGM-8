@@ -1,18 +1,28 @@
 import mongoose from 'mongoose'
 
 const spvSchema = mongoose.Schema({
-    name:{
+    name: {
         type: String,
         required: true
     },
-    email:{
+    personal_id: {
         type: String,
         required: true
     },
-    password:{
+    email: {
         type: String,
         required: true
     },
+    password: {
+        type: String,
+        required: true
+    },
+    isVerified: {
+        type: Boolean,
+        default: false
+    }
+}, {
+    timestamps: true,
 })
 
 const Supervisor = mongoose.model('Supervisor', spvSchema)

@@ -1,10 +1,10 @@
 import mongoose from 'mongoose'
 
 const secretSchema = new mongoose.Schema({
-    _custId: {
+    _spvId: {
         type: mongoose.Schema.Types.ObjectId,
         required: true,
-        ref: 'Customer'
+        ref: 'Supervisor'
     },
     token: {
         type: String,
@@ -19,5 +19,5 @@ const secretSchema = new mongoose.Schema({
     timestamps: true,
 })
 
-const secretCode = mongoose.model('secretCode', secretSchema)
-export default secretCode
+const secretCodeSpv = mongoose.model('secretCodeSpv', secretSchema)
+export default secretCodeSpv

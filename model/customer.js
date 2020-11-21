@@ -16,16 +16,20 @@ const customerSchema = mongoose.Schema({
     },
     account_number: {
         type: String,
+        unique: true,
         required: true
     },
     no_ktp: {
         type: String,
+        unique: true,
         required: true
     },
     isVerified: {
         type: Boolean,
         default: false
     }
+}, {
+    timestamps: true,
 })
 
 const Customer = mongoose.model('Customer', customerSchema)

@@ -1,11 +1,12 @@
 import mongoose from 'mongoose'
 
 const ticketSchema = mongoose.Schema({
-   id_ticket: {
+
+   ticket_id: {
       type: String,
       required: true
-  },
-  complaint_name: {
+   },
+   complaint_name: {
       type: String,
       required: true
    },

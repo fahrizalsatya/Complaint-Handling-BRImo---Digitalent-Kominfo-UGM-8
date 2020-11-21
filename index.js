@@ -5,8 +5,8 @@ import CustomerRouter from './controller/CustomerController.js'
 import csRouter from './controller/CsController.js'
 import SpvRouter from './controller/SpvController.js'
 import ticketRouter from './controller/TicketController.js'
-import uploadRouter from './controller/UploadController.js'
 import cors from 'cors'
+import uploadRouter from './controller/UploadController.js'
 
 import dotenv from 'dotenv'
 dotenv.config()
@@ -26,7 +26,7 @@ mongoose.connect(process.env.MONGODB_URI, {
 
 app.use(morgan('dev'))
 app.use(express.json())
-app.use(cors)
+app.use(cors())
 
 app.get('/', (req, res) => {
     res.json({ message: "Success!" })
