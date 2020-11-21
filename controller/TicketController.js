@@ -164,14 +164,13 @@ ticketRouter.put('/get-ticket', async(req, res) => {
     //const [idTicket, idCS] = req.body
     const ticket = Ticket.findById(req.query.id_ticket)
     if (ticket) {
-        Ticket.aggregate([{
-            $replaceWith: { assigned_to: String(req.query.id_cs), tag: "ON PROGRESS", status: "READ"}
-        }])
-
+      ticket.assigned_to = String(req.query.id_cs),
+      ticket.tag = "ON PROGRESS",
+      ticket.status= "READ"
         const updateTicket = await ticket.save()
         res.status(200).json(updateTicket)
     } else {
-        res.status(201).json({
+        res.status(201).send({
             message: "Update ticket failed"
         })
     }
