@@ -19,19 +19,19 @@ SpvRouter.use(bodyParser.json())
 //POST /api/spv/signup
 SpvRouter.post('/signup', async(req, res) => {
     try {
-        const { name, email, password, personal_id } = req.body
-        Supervisor.findOne({ $or: [{ email }, { personal_id }] }, async(err, spv) => {
+        const { name, email, password } = req.body
+        Supervisor.findOne({ email }, async(err, spv) => {
             if (spv) {
-                res.status(201).json({ message: 'The email address or identity you have entered is already associated with another account.' })
+                res.status(201).json({ message: 'The email address is already associated with another account.' })
             } else {
                 var saltRounds = 12
                 const hashedPassword = await bcrypt.hash(password, saltRounds)
-
+                var rand = Math.floor(Math.random()*10000)+1000
                 spv = new Supervisor({
                     "name": name,
                     "email": email,
                     "password": hashedPassword,
-                    "personal_id": personal_id
+                    "personal_id": "SPV-"+String(rand)
                 })
 
                 // Create and save the spv
@@ -255,19 +255,20 @@ SpvRouter.post('/change-password', async(req, res) => {
 //POST /api/spv/add-cs
 SpvRouter.post('/add-cs', async(req, res) => {
     try {
-        const { name, personal_id, email, password, photo, pub_name, pub_photo, final_rating } = req.body
+        const { name, email, password, photo, pub_name, pub_photo, final_rating } = req.body
         const csAccount = await CustService.findOne({ email })
 
         if (csAccount) {
             res.status(201).json({
-                message: 'Email telah terdaftar'
+                message: 'Email has been registered, please enter another email'
             })
         } else {
             var saltRounds = 12
             const hashedPw = await bcrypt.hash(password, saltRounds)
+            var rand = Math.floor(Math.random()*10000)+1000
             const createdCS = new CustService({
                 "name": name,
-                "personal_id": personal_id,
+                "personal_id": "CS-"+String(rand),
                 "email": email,
                 "password": hashedPw,
                 "photo": photo,
