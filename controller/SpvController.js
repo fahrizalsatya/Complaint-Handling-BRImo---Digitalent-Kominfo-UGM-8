@@ -320,10 +320,18 @@ SpvRouter.get('/cs/profile/id', async(req,res)=>{
 
 //List Daftar CS
 // GET /api/spv/cs-list
-
 SpvRouter.get('/cs-list',async(req,res)=>{
-    const cslist = await CustService.find({})
-    res.status(200).json(cslist)
+    var token = req.headers['x-access-token']
+    if(!token){
+        return res.status(401).send({ auth: false, message: 'Tidak ada token yang diberikan!' })
+    }
+    jwt.verify(token, Config.secret, async(err, decode)=>{
+        if(err){
+            return res.status(500).send({ auth: false, message: 'Failed to authenticate token!' })
+        }
+        const cslist = await CustService.find({})
+        res.status(200).json(cslist)
+    })
 })
 
 export default SpvRouter
