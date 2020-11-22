@@ -278,16 +278,27 @@ CustomerRouter.post('/change-password', async(req, res) => {
 })
 
 //GET CS profile
-CustomerRouter.get('/cs/profile/id', async(req,res)=>{
-    const csProfile= await CustService.findById(req.query.id,{pub_name:1, pub_photo:1})
-    if (csProfile) {
-        res.status(200).json(csProfile)
-    }else{
-        res.status(201).json({
-            message: "CS not found"
-        })
-    }
+//Show CS profile for customer
+//GET api/cs/tickets/ticket-list/unread
+CustomerRouter.get('/cs-profile/cs_id', async(req,res)=>{
+    var token = req.headers['x-access-token']
+    if (!token) {
+       return res.status(401).send({ auth: false, message: 'Tidak ada token yang diberikan!' })
+      }
+      JWT.verify(token, Config.secret, async(err, decode) =>{
+         if (err) {
+            return res.status(500).send({ auth: false, message: 'Failed to authenticate token!' })
+         }
+         const csProfile= await CustService.findById(req.query.cs_id,{pub_name:1, pub_photo:1})
+         if (csProfile) {
+             res.status(200).json(csProfile)
+         }else{
+             res.status(201).json({
+                 message: "CS not found"
+             })
+         }
 
+        })
 })
 
 export default CustomerRouter
