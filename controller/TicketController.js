@@ -200,34 +200,66 @@ ticketRouter.post('/my-ticket/:id_ticket/close', async(req, res) => {
 
 })
 
-//GET Escalated Ticket List for SPV
-// ticketRouter.get('/ticket-list/escalated', async(req, res) => {
-//     const tickets = await Ticket.aggregate({
-//         $match: { tag: 'ESCALATED' }
-//     })
-//     if (tickets) {
-//         res.json(tickets)
-//     } else {
-//         res.send("Ticket not found")
-//     }
-// })
+// GET Escalated Ticket List for SPV
+//GET api/spv/tickets/lists/escalated
+ticketRouter.get('/lists/escalated', async(req, res) => {
+   try {
+      var token = req.headers['x-access-token']
+      if (!token) 
+         return res.status(401).send({ auth: false, message: 'TIdak ada token yang diberikan!' })
 
-//GET Escalated Ticket List by Category for SPV
-// ticketRouter.get('/ticket-list/escalated/:category', async(req, res) => {
-//     const tickets = await Ticket.aggregate(
-//         [{
-//                 $match: { tag: 'ESCALATED' }
-//             },
-//             {
-//                 $match: { category: String(req.params.category) }
+      JWT.verify(token, Config.secret, async(err, decode) => {
+         if (err)
+            return res.status(500).send({ auth: false, message: 'Failed to authenticate token!'})
+           
+         const tickets = await Ticket.aggregate({
+               $match: { tag: 'ESCALATED' }
+          })
+         if (tickets) {
+              res.json(tickets)
+         } else {
+              res.send("Ticket not found")
+           }
+      })
+   } catch (error) {
+      res.status(500).json({ error: error})
+   }
+ })
+
+//PUT Ticket Reply for Customer, CS, SPV
+//PUT api/customer/tickets/reply
+//PUT api/cs/tickets/reply
+//PUT api/spv/tickets/reply
+// ticketRouter.put('/reply', async(req, res) => {
+//    try {
+//       var token = req.headers['x-access-token']
+//       if (!token) 
+//          return res.status(401).send({ auth: false, message: 'TIdak ada token yang diberikan!' })
+
+//       JWT.verify(token, Config.secret, async(err, decode) => {
+//          if (err)
+//             return res.status(500).send({ auth: false, message: 'Failed to authenticate token!'})
+//             const id_user = decode.customer._id
+//             Chat.findOne({}, async(err, chat)=>{
+
 //             }
-//         ]
-//     )
-//     if (tickets) {
-//         res.json(tickets)
-//     } else {
-//         res.send("Ticket not found")
-//     }
-// })
+//       })
+//    } catch (error) {
+//       res.status(500).json({ error: error})
+//    }
+//  })
 
+
+// try {
+//    var token = req.headers['x-access-token']
+//    if (!token) 
+//       return res.status(401).send({ auth: false, message: 'TIdak ada token yang diberikan!' })
+
+//    JWT.verify(token, Config.secret, async(err, decode) => {
+//       if (err)
+//          return res.status(500).send({ auth: false, message: 'Failed to authenticate token!'})
+//    })
+// } catch (error) {
+//    res.status(500).json({ error: error})
+// }
 export default ticketRouter

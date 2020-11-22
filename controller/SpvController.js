@@ -46,14 +46,14 @@ SpvRouter.post('/signup', async(req, res) => {
                     // Save the verification token
                     token.save(function(err) {
                         if (err) { return res.status(500).json({ msg: err.message }); }
-                        console.log('Hello,\n\n' + 'Please verify your account by clicking the link: \nhttp:\/\/' + req.headers.host + '\/api\/customer\/verify\/' + spv.email + '\/' + token.token)
+                        console.log('Hello,\n\n' + 'Please verify your account by clicking the link: \nhttp:\/\/' + req.headers.host + '\/api\/spv\/verify\/' + spv.email + '\/' + token.token)
 
                         //Show in Postman Only
                         //res.status(200).json('Hello,\n\n' + 'Please verify your account by clicking the link: \nhttp:\/\/' + req.headers.host + '\/api\/customer\/verify\/' + customer.email + '\/' + token.token)
 
                         // Send the email
                         var transporter = nodemailer.createTransport({ name: 'no-reply@BRImo.com', host: 'smtp.ethereal.email', port: 587, auth: { user: process.env.MAIL, pass: process.env.PASS } });
-                        var mailOptions = { from: process.env.MAIL, to: spv.email, subject: 'Account Verification Token', text: 'Hello,\n\n' + 'Please verify your account by clicking the link: \nhttp:\/\/' + req.headers.host + '\/api\/customer\/verify\/' + spv.email + '\/' + token.token };
+                        var mailOptions = { from: process.env.MAIL, to: spv.email, subject: 'Account Verification Token', text: 'Hello,\n\n' + 'Please verify your account by clicking the link: \nhttp:\/\/' + req.headers.host + '\/api\/spv\/verify\/' + spv.email + '\/' + token.token };
                         transporter.sendMail(mailOptions, function(err) {
                             if (err) { return res.status(500).json({ msg: err.message }); }
                             res.status(200).json('A verification email has been sent to ' + spv.email + '.');
@@ -71,6 +71,7 @@ SpvRouter.post('/signup', async(req, res) => {
 //SEND MAIL
 // api/spv/resend
 SpvRouter.post('/resend', async(req, res) => {
+    try{
     Supervisor.findOne({ email: req.body.email }, function(err, spv) {
         if (!spv) return res.status(201).json({ msg: 'We were unable to find a user with that email.' });
         if (spv.isVerified) return res.status(201).json({ msg: 'This account has already been verified. Please log in.' });
@@ -78,7 +79,7 @@ SpvRouter.post('/resend', async(req, res) => {
         // Create a verification token, save it, and send email
         var token = new secretCodeSpv({ _spvId: spv._id, token: crypto.randomBytes(16).toString('hex') });
         console.log(token)
-        console.log('Hello,\n\n' + 'Please verify your account by clicking the link: \nhttp:\/\/' + req.headers.host + '\/api\/customer\/verify\/' + spv.email + '\/' + token.token)
+        console.log('Hello,\n\n' + 'Please verify your account by clicking the link: \nhttp:\/\/' + req.headers.host + '\/api\/spv\/verify\/' + spv.email + '\/' + token.token)
 
         //Show in Postman only
         //res.status(200).json('Hello,\n\n' + 'Please verify your account by clicking the link: \nhttp:\/\/' + req.headers.host + '\/api\/customer\/verify\/' + customer.email + '\/' + token.token)
@@ -89,7 +90,7 @@ SpvRouter.post('/resend', async(req, res) => {
 
             // Send the email
             var transporter = nodemailer.createTransport({ name: 'no-reply@BRImo.com', host: 'smtp.ethereal.email', port: 587, auth: { user: process.env.MAIL, pass: process.env.PASS } });
-            var mailOptions = { from: process.env.MAIL, to: spv.email, subject: 'Account Verification Token', text: 'Hello,\n\n' + 'Please verify your account by clicking the link: \nhttp:\/\/' + req.headers.host + '\/api\/customer\/verify\/' + spv.email + '\/' + token.token };
+            var mailOptions = { from: process.env.MAIL, to: spv.email, subject: 'Account Verification Token', text: 'Hello,\n\n' + 'Please verify your account by clicking the link: \nhttp:\/\/' + req.headers.host + '\/api\/spv\/verify\/' + spv.email + '\/' + token.token };
             transporter.sendMail(mailOptions, function(err) {
                 if (err) { return res.status(500).json({ msg: err.message }); }
                 res.status(200).json('A verification email has been sent to ' + spv.email + '.')
@@ -98,11 +99,15 @@ SpvRouter.post('/resend', async(req, res) => {
         });
 
     });
+}catch (error) {
+    res.status(500).json({ error: error })
+}
 })
 
 //Verify
 //POST /api/spv/verify/:email/:token
 SpvRouter.post('/verify/:email/:token', async(req, res) => {
+    try{
     // Find a matching token
     secretCodeSpv.findOne({ token: req.params.token }, function(err, token) {
         if (!token) return res.status(201).json({ type: 'not-verified', msg: 'We were unable to find a valid token. Your token my have expired.' });
@@ -120,6 +125,9 @@ SpvRouter.post('/verify/:email/:token', async(req, res) => {
             });
         });
     });
+}catch (error) {
+    res.status(500).json({ error: error })
+}
 });
 
 //Login SPV
@@ -161,47 +169,59 @@ SpvRouter.post('/login', async(req, res) => {
 //FORGOT PASSWORD
 //POST api/spv/forgot-password
 SpvRouter.post('/forgot-password', async(req, res) => {
-    Supervisor.findOne({ email: req.body.email }, async(err, spv) => {
-        if (!spv) return res.status(201).json({ msg: 'We were unable to find a user with that email.' });
-        if (spv.isVerified === false) return res.status(201).json({ msg: 'This account has not been verified. Please verify.' });
-
-        //Generate New Password
-        var newPassword = generator.generate({
-            length: 8,
-            numbers: true,
-            uppercase: true,
-            lowercase: true
-
-        })
-
-        // Hashed Password
-        var saltRounds = 12
-        const hashedPassword = await bcrypt.hash(newPassword, saltRounds)
-
-        //Changed Hashed Password
-        customer.password = hashedPassword
-        console.log(newPassword)
-        console.log(customer.password)
-        console.log(customer)
-
-        //Show in Postman only
-        //res.status(200).json(newPassword)
-
-        // Save the New Password
-        spv.save(function(err) {
-            if (err) { return res.status(500).json({ msg: err.message }); }
-
-            // Send the email contain new password
-            var transporter = nodemailer.createTransport({ name: 'no-reply@BRImo.com', host: 'smtp.ethereal.email', port: 587, auth: { user: process.env.MAIL, pass: process.env.PASS } });
-            var mailOptions = { from: process.env.MAIL, to: customer.email, subject: 'Changed Password', text: 'Hello,\n\n' + 'Please input your changed password account by input this new password: ' + newPassword + '.\n' };
-            transporter.sendMail(mailOptions, function(err) {
-                if (err) { return res.status(500).json({ msg: err.message }); }
-                res.status(200).send('A Changed Password has been sent to ' + spv.email + '.');
-                //res.status(200).json('A Changed Password has been sent to ' + spv.email + '.\n', 'Message sent: %s', info.messageId + '\n' + 'Preview URL: %s', nodemailer.getTestMessageUrl(info));
-            });
-        });
-
-    });
+    try{
+        var token = req.headers['x-access-token']
+            if (!token) 
+              return res.status(401).send({ auth: false, message: 'TIdak ada token yang diberikan!' })
+        
+            JWT.verify(token, Config.secret, async(err, decode) => {
+              if (err)
+                  return res.status(500).send({ auth: false, message: 'Failed to authenticate token!'})
+          
+                  Supervisor.findOne({ email: req.body.email }, async(err, spv) => {
+                    if (!spv) return res.status(201).json({ msg: 'We were unable to find a user with that email.' });
+                    if (spv.isVerified === false) return res.status(201).json({ msg: 'This account has not been verified. Please verify.' });
+            
+                    //Generate New Password
+                    var newPassword = generator.generate({
+                        length: 8,
+                        numbers: true,
+                        uppercase: true,
+                        lowercase: true
+            
+                    })
+            
+                    // Hashed Password
+                    var saltRounds = 12
+                    const hashedPassword = await bcrypt.hash(newPassword, saltRounds)
+            
+                    //Changed Hashed Password
+                    customer.password = hashedPassword
+                    console.log(newPassword)
+                    console.log(customer.password)
+                    console.log(customer)
+            
+                    //Show in Postman only
+                    //res.status(200).json(newPassword)
+            
+                    // Save the New Password
+                    spv.save(function(err) {
+                        if (err) { return res.status(500).json({ msg: err.message }); }
+            
+                        // Send the email contain new password
+                        var transporter = nodemailer.createTransport({ name: 'no-reply@BRImo.com', host: 'smtp.ethereal.email', port: 587, auth: { user: process.env.MAIL, pass: process.env.PASS } });
+                        var mailOptions = { from: process.env.MAIL, to: customer.email, subject: 'Changed Password', text: 'Hello,\n\n' + 'Please input your changed password account by input this new password: ' + newPassword + '.\n' };
+                        transporter.sendMail(mailOptions, function(err) {
+                            if (err) { return res.status(500).json({ msg: err.message }); }
+                            res.status(200).send('A Changed Password has been sent to ' + spv.email + '.');
+                            //res.status(200).json('A Changed Password has been sent to ' + spv.email + '.\n', 'Message sent: %s', info.messageId + '\n' + 'Preview URL: %s', nodemailer.getTestMessageUrl(info));
+                        });
+                    });
+                });
+                })
+}catch (error) {
+    res.status(500).json({ error: error })
+}
 })
 
 //CHANGE PASSWORD

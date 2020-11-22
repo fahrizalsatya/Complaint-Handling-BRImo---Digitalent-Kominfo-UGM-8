@@ -71,6 +71,7 @@ CustomerRouter.post('/signup', async(req, res) => {
 //SEND MAIL
 // api/customer/resend
 CustomerRouter.post('/resend', async(req, res) => {
+    try{
     Customer.findOne({ email: req.body.email }, function(err, customer) {
         if (!customer) return res.status(201).json({ msg: 'We were unable to find a user with that email.' });
         if (customer.isVerified) return res.status(201).json({ msg: 'This account has already been verified. Please log in.' });
@@ -98,11 +99,15 @@ CustomerRouter.post('/resend', async(req, res) => {
         });
 
     });
+} catch (error) {
+    res.status(500).json({ error: error })
+}
 })
 
 //Verify
 //POST /api/customer/verify/:email/:token
 CustomerRouter.post('/verify/:email/:token', async(req, res) => {
+    try{
     // Find a matching token
     secretCode.findOne({ token: req.params.token }, function(err, token) {
         if (!token) return res.status(201).json({ type: 'not-verified', msg: 'We were unable to find a valid token. Your token my have expired.' });
@@ -120,6 +125,9 @@ CustomerRouter.post('/verify/:email/:token', async(req, res) => {
             });
         });
     });
+}catch (error) {
+    res.status(500).json({ error: error })
+}
 });
 
 //Login endpoint untuk customer
@@ -166,6 +174,7 @@ CustomerRouter.post('/login', async(req, res) => {
 //FORGOT PASSWORD
 //POST api/customer/forgot-password
 CustomerRouter.post('/forgot-password', async(req, res) => {
+    try{
     Customer.findOne({ email: req.body.email }, async(err, customer) => {
         if (!customer) return res.status(201).json({ msg: 'We were unable to find a user with that email.' });
         if (customer.isVerified === false) return res.status(201).json({ msg: 'This account has not been verified. Please verify.' });
@@ -207,16 +216,27 @@ CustomerRouter.post('/forgot-password', async(req, res) => {
         });
 
     });
+}catch (error) {
+    res.status(500).json({ error: error })
+}
 })
 
 //CHANGE PASSWORD
 //POST /api/customer/change-password
 CustomerRouter.post('/change-password', async(req, res) => {
     try {
-        const { email, password, newPassword } = req.body
-        const currentCustomer = await new Promise((resolve, reject) => {
+        var token = req.headers['x-access-token']
+    if (!token) 
+       return res.status(401).send({ auth: false, message: 'TIdak ada token yang diberikan!' })
+
+    JWT.verify(token, Config.secret, async(err, decode) => {
+       if (err)
+          return res.status(500).send({ auth: false, message: 'Failed to authenticate token!'})
+    
+            const { email, password, newPassword } = req.body
+            const currentCustomer = await new Promise((resolve, reject) => {
             Customer.find({ "email": email }, function(err, customer) {
-                if (err) reject(err)
+            if (err) reject(err)
                 resolve(customer)
             })
         })
@@ -251,6 +271,7 @@ CustomerRouter.post('/change-password', async(req, res) => {
                 "status": "email not found"
             })
         }
+        })
     } catch (error) {
         res.status(500).json({ error: error })
     }
