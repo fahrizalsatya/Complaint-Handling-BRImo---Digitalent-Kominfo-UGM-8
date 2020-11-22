@@ -1,7 +1,7 @@
 import express from 'express'
 import Ticket from '../model/ticket.js'
 import Rating from '../model/rating.js'
-import JWT from 'jsonwebtoken'
+import jwt from 'jsonwebtoken'
 import Config from '../config/config.js'
 import bodyParser from 'body-parser'
 
@@ -29,7 +29,7 @@ ticketRouter.post('/init_ticket', async(req, res) => {
       if (!token) 
          return res.status(401).send({ auth: false, message: 'TIdak ada token yang diberikan!' })
 
-      JWT.verify(token, Config.secret, async(err, decode) => {
+      jwt.verify(token, Config.secret, async(err, decode) => {
          if (err)
             return res.status(500).send({ auth: false, message: 'Failed to authenticate token!'})
          
@@ -69,7 +69,7 @@ ticketRouter.get('/lists', async(req, res) => {
    if (!token)
       return res.status(401).send({ auth: false, message: 'Tidak ada token yang diberikan!' })
    
-      JWT.verify(token, Config.secret, async(err, decode) => {
+      jwt.verify(token, Config.secret, async(err, decode) => {
       if (err)
          return res.status(500).send({ auth: false, message: 'Failed to authenticate token!' })
       
@@ -100,7 +100,7 @@ ticketRouter.get('/history', async(req, res) => {
    if (!token)
       return res.status(401).send({ auth: false, message: 'Tidak ada token yang diberikan!' })
    
-   JWT.verify(token, Config.secret, async(err, decode) => {
+   jwt.verify(token, Config.secret, async(err, decode) => {
       if (err)
          return res.status(500).send({ auth: false, message: 'Gagal mengauntentikasi token!' })
       
@@ -168,7 +168,7 @@ ticketRouter.post('/:id/rate', async(req, res) => {
    if (!token)
       return res.status(401).send({ auth: false, message: 'Tidak ada token yang diberikan!'})
 
-   JWT.verify(token, Config.secret, async(err, decode) => {
+   jwt.verify(token, Config.secret, async(err, decode) => {
       if (err)
          return res.status(500).send({ auth: false, message: 'Gagal mengautentikasi token!'})
       
@@ -191,7 +191,7 @@ ticketRouter.get('/ticket-list/unread', async(req, res) => {
     if (!token) {
        return res.status(401).send({ auth: false, message: 'Tidak ada token yang diberikan!' })
       }
-      JWT.verify(token, Config.secret, async(err, decode) =>{
+      jwt.verify(token, Config.secret, async(err, decode) =>{
          if (err) {
             return res.status(500).send({ auth: false, message: 'Failed to authenticate token!' })
          }
@@ -217,13 +217,13 @@ ticketRouter.put('/ticket_id/get-ticket', async(req, res) => {
     if (!token) {
        return res.status(401).send({ auth: false, message: 'Tidak ada token yang diberikan!' })
       }
-      JWT.verify(token, Config.secret, async(err, decode) =>{
+      jwt.verify(token, Config.secret, async(err, decode) =>{
          if (err) {
             return res.status(500).send({ auth: false, message: 'Failed to authenticate token!' })
          }
          const ticket = await Ticket.findById(req.query.ticket_id)
           if (ticket) {
-             ticket.assigned_to = decode.customer.name,
+             ticket.assigned_to = decode.adminService._id,
              ticket.tag = "ON PROGRESS",
              ticket.status= "READ"
              const updateTicket = await ticket.save()
@@ -245,13 +245,14 @@ ticketRouter.get('/ticket-list/:id_user',async(req,res)=>{
     if(!token){
         return res.status(401).send({auth:false, message:'Tidak ada token yang diberikan'})
     }
-    JWT.verify(token,Config.secret,async(err,decode)=>{
+    jwt.verify(token,Config.secret,async(err,decode)=>{
         if(err){
             return res.status(500).send({auth:false, message:'Failed to authenticate token'})
         }
         const tickets = await Ticket.find({
             assigned_to:String(req.params.id_user),
-            category : String(req.query.category),
+            category : {name: String(req.query.category),
+            detail:""},
             tag : String(req.query.tag)
         })
         if(tickets){
@@ -265,13 +266,29 @@ ticketRouter.get('/ticket-list/:id_user',async(req,res)=>{
 })
 
 //CLOSE TICKET
-//POST api/customer/my-ticket/:id_user/close
-//POST api/spv/my-ticket/:id_user/close
-//POST api/cs/my-ticket/:id_user/close
-ticketRouter.post('/my-ticket/:id_ticket/close', async(req, res) => {
-    const { id_ticket } = req.body
-    const closedTicket = await Ticket.updateOne({ id_ticket: id_ticket }, { $set: { tag: 'CLOSED' } }).catch(err => res.status(400).send(err.message))
-    res.status(200).send(closedTicket)
+//POST api/customer/my-ticket/ticket_id/close
+//POST api/spv/my-ticket/ticket_id/close
+//POST api/cs/my-ticket/ticket_id/close
+ticketRouter.post('/my-ticket/ticket_id/close', async(req, res) => {
+   var token = req.headers['x-access-token']
+   if (!token) {
+      return res.status(401).send({ auth: false, message: 'Tidak ada token yang diberikan!' })
+     }
+     jwt.verify(token, Config.secret, async(err, decode) =>{
+        if (err) {
+           return res.status(500).send({ auth: false, message: 'Failed to authenticate token!' })
+        }
+        const ticket = await Ticket.findById(req.query.ticket_id)
+        if (ticket) {
+           ticket.tag = String('CLOSED')
+           const updateTicket= await ticket.save()
+           res.status(200).json(updateTicket)
+        }else{
+         res.status(201).json({
+            message: "ticket CLOSED failed"
+         })
+        }
+      })
 
 })
 
@@ -283,7 +300,7 @@ ticketRouter.get('/lists/escalated', async(req, res) => {
       if (!token) 
          return res.status(401).send({ auth: false, message: 'TIdak ada token yang diberikan!' })
 
-      JWT.verify(token, Config.secret, async(err, decode) => {
+      jwt.verify(token, Config.secret, async(err, decode) => {
          if (err)
             return res.status(500).send({ auth: false, message: 'Failed to authenticate token!'})
            
@@ -311,7 +328,7 @@ ticketRouter.get('/lists/escalated', async(req, res) => {
 //       if (!token) 
 //          return res.status(401).send({ auth: false, message: 'TIdak ada token yang diberikan!' })
 
-//       JWT.verify(token, Config.secret, async(err, decode) => {
+//       jwt.verify(token, Config.secret, async(err, decode) => {
 //          if (err)
 //             return res.status(500).send({ auth: false, message: 'Failed to authenticate token!'})
 //             const id_user = decode.customer._id
@@ -330,7 +347,7 @@ ticketRouter.get('/lists/escalated', async(req, res) => {
 //    if (!token) 
 //       return res.status(401).send({ auth: false, message: 'TIdak ada token yang diberikan!' })
 
-//    JWT.verify(token, Config.secret, async(err, decode) => {
+//    jwt.verify(token, Config.secret, async(err, decode) => {
 //       if (err)
 //          return res.status(500).send({ auth: false, message: 'Failed to authenticate token!'})
 //    })
@@ -347,7 +364,7 @@ ticketRouter.put('/ticket_id/update-tag', async(req,res)=>{
    if (!token) {
       return res.status(401).send({ auth: false, message: 'Tidak ada token yang diberikan!' })
      }
-     JWT.verify(token, Config.secret, async(err, decode) =>{
+     jwt.verify(token, Config.secret, async(err, decode) =>{
         if (err) {
            return res.status(500).send({ auth: false, message: 'Failed to authenticate token!' })
         }
@@ -372,7 +389,7 @@ ticketRouter.put('/ticket_id/update-category', async(req,res)=>{
    if (!token) {
       return res.status(401).send({ auth: false, message: 'Tidak ada token yang diberikan!' })
      }
-     JWT.verify(token, Config.secret, async(err, decode) =>{
+     jwt.verify(token, Config.secret, async(err, decode) =>{
         if (err) {
            return res.status(500).send({ auth: false, message: 'Failed to authenticate token!' })
         }

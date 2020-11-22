@@ -113,13 +113,13 @@ SpvRouter.post('/verify/:email/:token', async(req, res) => {
         if (!token) return res.status(201).json({ type: 'not-verified', msg: 'We were unable to find a valid token. Your token my have expired.' });
 
         // If we found a token, find a matching user
-        Customer.findOne({ _id: token._spvId, email: req.params.email }, function(err, spv) {
+        Supervisor.findOne({ _id: token._spvId, email: req.params.email }, function(err, spv) {
             if (!spv) return res.status(201).json({ msg: 'We were unable to find a user for this token.' });
             if (spv.isVerified) return res.status(201).json({ type: 'already-verified', msg: 'This user has already been verified.' });
 
             // Verify and save the user
-            customer.isVerified = true;
-            customer.save(function(err) {
+            spv.isVerified = true;
+            spv.save(function(err) {
                 if (err) { return res.status(500).json({ msg: err.message }); }
                 res.status(200).json("The account has been verified. Please log in.");
             });
@@ -145,9 +145,9 @@ SpvRouter.post('/login', async(req, res) => {
             bcrypt.compare(password, currentSpv[0].password).then(function(result, err) {
                 if (result) {
                     if (err) return res.status(500).send("Terdapat masalah saat login SPV")
-                    const supervisor = currentSpv[0]
-                    var token = jwt.sign({ supervisor }, Config.secret, {
-                        expiresIn: '1m'
+                    const adminService = currentSpv[0]
+                    var token = jwt.sign({ adminService }, Config.secret, {
+                        expiresIn: '1d'
                     })
                     res.status(200).send({ auth: true, "status": "Success!!", token: token })
                 } else {
@@ -174,7 +174,7 @@ SpvRouter.post('/forgot-password', async(req, res) => {
             if (!token) 
               return res.status(401).send({ auth: false, message: 'TIdak ada token yang diberikan!' })
         
-            JWT.verify(token, Config.secret, async(err, decode) => {
+            jwt.verify(token, Config.secret, async(err, decode) => {
               if (err)
                   return res.status(500).send({ auth: false, message: 'Failed to authenticate token!'})
           

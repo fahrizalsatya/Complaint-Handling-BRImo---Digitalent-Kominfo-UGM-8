@@ -229,7 +229,7 @@ CustomerRouter.post('/change-password', async(req, res) => {
     if (!token) 
        return res.status(401).send({ auth: false, message: 'TIdak ada token yang diberikan!' })
 
-    JWT.verify(token, Config.secret, async(err, decode) => {
+    jwt.verify(token, Config.secret, async(err, decode) => {
        if (err)
           return res.status(500).send({ auth: false, message: 'Failed to authenticate token!'})
     
@@ -285,7 +285,7 @@ CustomerRouter.get('/cs-profile/cs_id', async(req,res)=>{
     if (!token) {
        return res.status(401).send({ auth: false, message: 'Tidak ada token yang diberikan!' })
       }
-      JWT.verify(token, Config.secret, async(err, decode) =>{
+      jwt.verify(token, Config.secret, async(err, decode) =>{
          if (err) {
             return res.status(500).send({ auth: false, message: 'Failed to authenticate token!' })
          }
