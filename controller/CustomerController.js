@@ -279,7 +279,7 @@ CustomerRouter.post('/change-password', async(req, res) => {
 
 //GET CS profile
 //Show CS profile for customer
-//GET api/cs/tickets/ticket-list/unread
+//GET api/customer/cs-profile/cs_id
 CustomerRouter.get('/cs-profile/cs_id', async(req,res)=>{
     var token = req.headers['x-access-token']
     if (!token) {
