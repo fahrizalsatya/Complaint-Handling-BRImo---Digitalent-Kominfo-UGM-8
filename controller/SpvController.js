@@ -39,7 +39,7 @@ SpvRouter.post('/signup', async(req, res) => {
                     if (err) {
                         return res.status(500).json({ msg: err.message });
                     }
-                    // Create a verification token for this customer
+                    // Create a verification token for this spv
                     var token = new secretCodeSpv({ _spvId: spv._id, token: crypto.randomBytes(16).toString('hex') });
                     console.log(token)
 
@@ -49,7 +49,7 @@ SpvRouter.post('/signup', async(req, res) => {
                         console.log('Hello,\n\n' + 'Please verify your account by clicking the link: \nhttp:\/\/' + req.headers.host + '\/api\/spv\/verify\/' + spv.email + '\/' + token.token)
 
                         //Show in Postman Only
-                        //res.status(200).json('Hello,\n\n' + 'Please verify your account by clicking the link: \nhttp:\/\/' + req.headers.host + '\/api\/customer\/verify\/' + customer.email + '\/' + token.token)
+                        //res.status(200).json('Hello,\n\n' + 'Please verify your account by clicking the link: \nhttp:\/\/' + req.headers.host + '\/api\/spv\/verify\/' + spv.email + '\/' + token.token)
 
                         // Send the email
                         var transporter = nodemailer.createTransport({ name: 'no-reply@BRImo.com', host: 'smtp.ethereal.email', port: 587, auth: { user: process.env.MAIL, pass: process.env.PASS } });
@@ -57,7 +57,7 @@ SpvRouter.post('/signup', async(req, res) => {
                         transporter.sendMail(mailOptions, function(err) {
                             if (err) { return res.status(500).json({ msg: err.message }); }
                             res.status(200).json('A verification email has been sent to ' + spv.email + '.');
-                            //res.status(200).json('A verification email has been sent to ' + customer.email + '.\n', 'Message sent: %s', info.messageId + '\n' + 'Preview URL: %s', nodemailer.getTestMessageUrl(info));
+                            //res.status(200).json('A verification email has been sent to ' + spv.email + '.\n', 'Message sent: %s', info.messageId + '\n' + 'Preview URL: %s', nodemailer.getTestMessageUrl(info));
                         });
                     });
                 })
@@ -82,7 +82,7 @@ SpvRouter.post('/resend', async(req, res) => {
         console.log('Hello,\n\n' + 'Please verify your account by clicking the link: \nhttp:\/\/' + req.headers.host + '\/api\/spv\/verify\/' + spv.email + '\/' + token.token)
 
         //Show in Postman only
-        //res.status(200).json('Hello,\n\n' + 'Please verify your account by clicking the link: \nhttp:\/\/' + req.headers.host + '\/api\/customer\/verify\/' + customer.email + '\/' + token.token)
+        //res.status(200).json('Hello,\n\n' + 'Please verify your account by clicking the link: \nhttp:\/\/' + req.headers.host + '\/api\/spv\/verify\/' + spv.email + '\/' + token.token)
 
         // Save the token
         token.save(function(err) {
@@ -169,15 +169,7 @@ SpvRouter.post('/login', async(req, res) => {
 //FORGOT PASSWORD
 //POST api/spv/forgot-password
 SpvRouter.post('/forgot-password', async(req, res) => {
-    try{
-        var token = req.headers['x-access-token']
-            if (!token) 
-              return res.status(401).send({ auth: false, message: 'TIdak ada token yang diberikan!' })
-        
-            jwt.verify(token, Config.secret, async(err, decode) => {
-              if (err)
-                  return res.status(500).send({ auth: false, message: 'Failed to authenticate token!'})
-          
+    try{          
                   Supervisor.findOne({ email: req.body.email }, async(err, spv) => {
                     if (!spv) return res.status(201).json({ msg: 'We were unable to find a user with that email.' });
                     if (spv.isVerified === false) return res.status(201).json({ msg: 'This account has not been verified. Please verify.' });
@@ -196,10 +188,10 @@ SpvRouter.post('/forgot-password', async(req, res) => {
                     const hashedPassword = await bcrypt.hash(newPassword, saltRounds)
             
                     //Changed Hashed Password
-                    customer.password = hashedPassword
+                    spv.password = hashedPassword
                     console.log(newPassword)
-                    console.log(customer.password)
-                    console.log(customer)
+                    console.log(spv.password)
+                    console.log(spv)
             
                     //Show in Postman only
                     //res.status(200).json(newPassword)
@@ -210,7 +202,7 @@ SpvRouter.post('/forgot-password', async(req, res) => {
             
                         // Send the email contain new password
                         var transporter = nodemailer.createTransport({ name: 'no-reply@BRImo.com', host: 'smtp.ethereal.email', port: 587, auth: { user: process.env.MAIL, pass: process.env.PASS } });
-                        var mailOptions = { from: process.env.MAIL, to: customer.email, subject: 'Changed Password', text: 'Hello,\n\n' + 'Please input your changed password account by input this new password: ' + newPassword + '.\n' };
+                        var mailOptions = { from: process.env.MAIL, to: spv.email, subject: 'Changed Password', text: 'Hello,\n\n' + 'Please input your changed password account by input this new password: ' + newPassword + '.\n' };
                         transporter.sendMail(mailOptions, function(err) {
                             if (err) { return res.status(500).json({ msg: err.message }); }
                             res.status(200).send('A Changed Password has been sent to ' + spv.email + '.');
@@ -218,7 +210,6 @@ SpvRouter.post('/forgot-password', async(req, res) => {
                         });
                     });
                 });
-                })
 }catch (error) {
     res.status(500).json({ error: error })
 }
@@ -228,6 +219,14 @@ SpvRouter.post('/forgot-password', async(req, res) => {
 //POST /api/spv/change-password
 SpvRouter.post('/change-password', async(req, res) => {
     try {
+        var token = req.headers['x-access-token']
+            if (!token) 
+              return res.status(401).send({ auth: false, message: 'TIdak ada token yang diberikan!' })
+        
+            jwt.verify(token, Config.secret, async(err, decode) => {
+              if (err)
+                  return res.status(500).send({ auth: false, message: 'Failed to authenticate token!'})
+
         const { email, password, newPassword } = req.body
         const currentSupervisor = await new Promise((resolve, reject) => {
             Supervisor.find({ "email": email }, function(err, spv) {
@@ -266,6 +265,7 @@ SpvRouter.post('/change-password', async(req, res) => {
                 "status": "email not found"
             })
         }
+    })
     } catch (error) {
         res.status(500).json({ error: error })
     }
@@ -341,6 +341,22 @@ SpvRouter.get('/cs-list',async(req,res)=>{
         }
         const cslist = await CustService.find({})
         res.status(200).json(cslist)
+    })
+})
+
+//List Daftar CS Dari Rating Tertinggi
+// GET /api/spv/best-cs
+SpvRouter.get('/best-cs',async(req,res)=>{
+    var token = req.headers['x-access-token']
+    if(!token){
+        return res.status(401).send({ auth: false, message: 'Tidak ada token yang diberikan!' })
+    }
+    jwt.verify(token, Config.secret, async(err, decode)=>{
+        if(err){
+            return res.status(500).send({ auth: false, message: 'Failed to authenticate token!' })
+        }
+        const bestcs = await CustService.find({final_rating:{$gt:0}}).sort({final_rating:-1})
+        res.status(200).json(bestcs)
     })
 })
 
