@@ -313,8 +313,10 @@ SpvRouter.post('/add-cs', async(req, res) => {
         })
     }
 })
-//GET CS profile
-SpvRouter.get('/cs/profile/id', async(req,res)=>{
+
+// Melihat profil akun CS
+// GET /api/spv/cs-profile/id
+SpvRouter.get('/cs-profile/id', async(req,res)=>{
     const csProfile= await CustService.findById(req.query.id)
     if (csProfile) {
         res.status(200).json(csProfile)

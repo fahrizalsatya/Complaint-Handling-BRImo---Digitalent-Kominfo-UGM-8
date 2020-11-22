@@ -80,7 +80,6 @@ ticketRouter.get('/lists', async(req, res) => {
          complaint_name: 1,
          tag: 1,
          status: 1,
-         id_cust: 1,
          assigned_to: 1
       })
 
@@ -103,31 +102,10 @@ ticketRouter.get('/history', async(req, res) => {
          return res.status(500).send({ auth: false, message: 'Gagal mengauntentikasi token!' })
       
       const id_cust = decode.customer._id
-      
-      /*const listClosedTicket = await Rating.aggregate([
-         {
-            $lookup: {
-               from: 'tickets',
-               //localField: 'id_ticket',
-               //foreignField: '_id',
-               pipeline: [{ $match: { tag: 'CLOSED' } }],
-               as: 'ticket'
-            }
-         }, {
-            $project: {
-               _id: 0, // objectId Rating
-               rating: 1,
-               'ticket.ticket_id': 1,
-               'ticket.complaint_name': 1,
-               'ticket.tag': 1,
-               'ticket.status': 1,
-            }
-         }
-      ])*/
 
       const listClosedTicket = await Ticket.aggregate([
          {
-            $match: { tag: 'CLOSED' }
+            $match: { id_cust, tag: 'CLOSED' }
          }, {
             $lookup: {
                from: 'ratings',
@@ -136,15 +114,24 @@ ticketRouter.get('/history', async(req, res) => {
                as: 'rating'
             }
          }, {
-            $project: { // Filter field yang mau ditampilkan / tidak
+            $project: { // Filter field yang mau ditampilkan
                _id: 1, // ObjectId ticket
                ticket_id: 1,
                complaint_name: 1,
                tag: 1,
                status: 1,
-               rating: 1,
-               createdAt: 0,
-               updatedAt: 0,
+               rating: 1
+            }
+         }, {
+            $project: { // Filter field yang tidak ditampilkan
+               rating: {
+                  _id: 0,
+                  id_ticket: 0,
+                  id_admin: 0,
+                  createdAt: 0,
+                  updatedAt: 0,
+                  __v: 0
+               }
             }
          }
       ])
@@ -183,7 +170,7 @@ ticketRouter.post('/:id/rate', async(req, res) => {
 })
 
 //ticket list unread for CS
-//GET api/cs/tickets/ticket-list/unread
+//GET api/cs/tickets/lists/unread
 ticketRouter.get('/lists/unread', async(req, res) => {
     var token = req.headers['x-access-token']
     if (!token) {
@@ -235,9 +222,8 @@ ticketRouter.put('/ticket_id/get-ticket', async(req, res) => {
 })
 
 //Endpoint untuk mencari tiket yang telah diassign pada diri sendiri berdasarkan tag dan category
-//GET /api/spv/tickets/ticket-list/:id_user
-//GET /api/cs/tickets/ticket-list/:id_user
-
+//GET /api/spv/tickets/lists/:id_user
+//GET /api/cs/tickets/lists/:id_user
 ticketRouter.get('/lists/:id_user',async(req,res)=>{
     var token = req.headers['x-access-token']
     if(!token){
@@ -264,10 +250,10 @@ ticketRouter.get('/lists/:id_user',async(req,res)=>{
 })
 
 //CLOSE TICKET
-//POST api/customer/my-ticket/ticket_id/close
-//POST api/spv/my-ticket/ticket_id/close
-//POST api/cs/my-ticket/ticket_id/close
-ticketRouter.post('/my-ticket/ticket_id/close', async(req, res) => {
+//POST api/customer/tickets/ticket_id/close
+//POST api/spv/tickets/ticket_id/close
+//POST api/cs/tickets/ticket_id/close
+ticketRouter.post('/ticket_id/close', async(req, res) => {
    var token = req.headers['x-access-token']
    if (!token) {
       return res.status(401).send({ auth: false, message: 'Tidak ada token yang diberikan!' })
