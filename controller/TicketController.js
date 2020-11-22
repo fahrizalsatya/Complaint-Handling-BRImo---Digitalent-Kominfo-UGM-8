@@ -267,9 +267,9 @@ ticketRouter.get('/ticket-list/:id_user',async(req,res)=>{
 
 //CLOSE TICKET
 //POST api/customer/my-ticket/ticket_id/close
-//POST api/spv/my-ticket/ticket_id/close
-//POST api/cs/my-ticket/ticket_id/close
-ticketRouter.post('/my-ticket/ticket_id/close', async(req, res) => {
+//POST api/spv/ticket_id/close
+//POST api/cs/ticket_id/close
+ticketRouter.post('/ticket_id/close', async(req, res) => {
    var token = req.headers['x-access-token']
    if (!token) {
       return res.status(401).send({ auth: false, message: 'Tidak ada token yang diberikan!' })
