@@ -198,7 +198,7 @@ ticketRouter.get('/ticket-list/unread', async(req, res) => {
          const tickets = await Ticket.aggregate([
             { $match: { status: "UNREAD" } }
         ])
-        if (tickets != null) {
+        if (tickets) {
             res.status(200).json(tickets)
         } else {
             res.status(201).json({
@@ -394,10 +394,17 @@ ticketRouter.put('/ticket_id/update-category', async(req,res)=>{
            return res.status(500).send({ auth: false, message: 'Failed to authenticate token!' })
         }
         const ticket = await Ticket.findById(req.query.ticket_id)
+        const name = req.query.category_name
         if (ticket) {
-           ticket.category = String(req.query.category)
-           const updateTicket= await ticket.save()
-           res.status(200).json(updateTicket)
+           if (name!= null ) {
+            ticket.category={
+               name: String(req.query.category_name)}
+           }else{
+            ticket.category={
+               name: "Other", detail: String(req.query.category_detail)}
+           }
+           const update_ticket= await ticket.save()
+           res.status(200).json(update_ticket)
         }else{
          res.status(201).json({
             message: "Updated ticket category failed"

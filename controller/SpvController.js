@@ -305,16 +305,28 @@ SpvRouter.post('/add-cs', async(req, res) => {
         })
     }
 })
+
 //GET CS profile
-SpvRouter.get('/cs/profile/id', async(req,res)=>{
-    const csProfile= await CustService.findById(req.query.id)
-    if (csProfile) {
-        res.status(200).json(csProfile)
-    }else{
-        res.status(201).json({
-            message: "CS not found"
+//Show CS profile for SPV
+//GET api/spv/cs-profile/cs_id
+SpvRouter.get('/cs-profile/cs_id', async(req,res)=>{
+    var token = req.headers['x-access-token']
+    if (!token) {
+       return res.status(401).send({ auth: false, message: 'Tidak ada token yang diberikan!' })
+      }
+      jwt.verify(token, Config.secret, async(err, decode) =>{
+         if (err) {
+            return res.status(500).send({ auth: false, message: 'Failed to authenticate token!' })
+         }
+         const csProfile= await CustService.findById(req.query.cs_id)
+         if (csProfile) {
+             res.status(200).json(csProfile)
+            }else{
+                res.status(201).json({
+                    message: "CS not found"
+                })
+            }
         })
-    }
 
 })
 
