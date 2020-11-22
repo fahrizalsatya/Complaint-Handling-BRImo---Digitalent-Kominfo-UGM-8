@@ -342,5 +342,21 @@ SpvRouter.get('/cs-list',async(req,res)=>{
     })
 })
 
+//List Daftar CS Dari Rating Tertinggi
+// GET /api/spv/best-cs
+SpvRouter.get('/best-cs',async(req,res)=>{
+    var token = req.headers['x-access-token']
+    if(!token){
+        return res.status(401).send({ auth: false, message: 'Tidak ada token yang diberikan!' })
+    }
+    jwt.verify(token, Config.secret, async(err, decode)=>{
+        if(err){
+            return res.status(500).send({ auth: false, message: 'Failed to authenticate token!' })
+        }
+        const bestcs = await CustService.find({final_rating:{$gt:0}}).sort({final_rating:-1})
+        res.status(200).json(bestcs)
+    })
+})
+
 export default SpvRouter
 
