@@ -1,11 +1,11 @@
 import mongoose from 'mongoose'
 
 const ratingSchema = mongoose.Schema({
-    ticket_id: {
+    id_ticket: {
         type: String,
         required: true,
     },
-    id_cs: {
+    id_admin: {
         type: String,
         required: true
     },

@@ -4,20 +4,25 @@ import Rating from '../model/rating.js'
 import JWT from 'jsonwebtoken'
 import Config from '../config/config.js'
 import bodyParser from 'body-parser'
-//import uploadRouter from './UploadController.js'
 
 const ticketRouter = express.Router()
 
 ticketRouter.use(bodyParser.urlencoded({extended:false}))
 ticketRouter.use(bodyParser.json())
-//ticketRouter.use('/init_ticket', uploadRouter)
 
-// Customer membuat tiket komplain dan secara otomatis mengisi nilai rating 0
-ticketRouter.post('/init_ticket', async(req, res) => {
-   // Insert logic here
-   
+// POST: /api/customer/tickets/init_ticket
+// Customer membuat tiket komplain
+ticketRouter.post('/init_ticket', async(req, res) => { 
    try {
-      const { complaint_name, categoryName, categoryDetail, description, screenshot, url_video } = req.body
+      const {
+         complaint_name,
+         categoryName,
+         categoryDetail,
+         description,
+         screenshot,
+         url_video
+      } = req.body
+      
       var random = Math.floor(Math.random()*10000)+1000
 
       var token = req.headers['x-access-token']
@@ -46,22 +51,16 @@ ticketRouter.post('/init_ticket', async(req, res) => {
             id_cust,
          })
 
-         const createdRating = new Rating({
-            ticket_id,
-            id_cs: '-',
-            rating: 0,
-         })
-
          const savedTicket = await createdTicket.save()
-         const savedRating = await createdRating.save()
          
          res.status(200).json({ message: 'Berhasil membuat tiket!' })
       })
    } catch (error) {
-      res.status(500).json({ error: error})
+      res.status(500).json({ error: error })
    }
 })
 
+// GET: /api/customer/tickets/lists
 // Customer melihat daftar tiket yang aktif
 ticketRouter.get('/lists', async(req, res) => {
    // Insert logic here
@@ -76,22 +75,25 @@ ticketRouter.get('/lists', async(req, res) => {
       
          const id_cust = decode.customer._id
          const listTicketCust = await Ticket.find({
-         id_cust, tag: { $ne: 'Closed' }
-            }, {
+            id_cust, tag: { $ne: 'CLOSED' }
+         }, {
             _id: 1,
             id_ticket: 1,
             complaint_name: 1,
             tag: 1,
-            status: 1
-            })
-      
-            if(listTicketCust && listTicketCust.length !==0)
-             res.status(200).json(listTicketCust)
-             else
-                res.status(404).json({ message: 'Anda belum membuat tiket komplain'})
+            status: 1,
+            id_cust: 1,
+            assigned_to: 1
+         })
+   
+         if(listTicketCust && listTicketCust.length !==0)
+            res.status(200).json(listTicketCust)
+         else
+            res.status(404).json({ message: 'Anda belum membuat tiket komplain'})
    })
 })
 
+// GET: /api/customer/tickets/history
 // Customer melihat daftar tiket yang sudah selesai (closed) dan dirating
 ticketRouter.get('/history', async(req, res) => {
    var token = req.headers['x-access-token']
@@ -100,29 +102,53 @@ ticketRouter.get('/history', async(req, res) => {
    
    JWT.verify(token, Config.secret, async(err, decode) => {
       if (err)
-         return res.status(500).send({ auth: false, message: 'Failed to authenticate token!' })
+         return res.status(500).send({ auth: false, message: 'Gagal mengauntentikasi token!' })
       
       const id_cust = decode.customer._id
-      const listTicketCust = await Ticket.find({
-         id_cust, status: 'CLOSED'
-      }, {
-         _id: 0,
-         id_ticket: 1,
-         complaint_name: 1,
-         status: 1,
-      })
       
-      if(listTicketCust && listTicketCust.length !== 0)
-         res.status(200).json(listTicketCust)
+      const listClosedTicket = await Ticket.aggregate([
+         {
+            $match: { tag: 'CLOSED' }
+         }, {
+            $lookup: {
+               from: 'ratings',
+               localField: '_id',
+               foreignField: 'id_ticket',
+               as: 'rating'
+            }
+         }/*, {
+            $project: {
+               _id: 1, // ObjectId tiket
+               ticket_id: 1,
+               complaint_name: 1,
+               tag: 1,
+               status: 1,
+            }
+         }*/
+      ])
+      
+      /*const listClosedTicket = await Ticket.find({
+         id_cust, tag: 'CLOSED'
+      }, {
+         _id: 1,
+         ticket_id: 1,
+         complaint_name: 1,
+         tag: 1,
+         status: 1,
+      })*/
+      
+      if(listClosedTicket && listClosedTicket.length !== 0)
+         res.status(200).json(listClosedTicket)
       else
-         res.status(404).json({ message: 'Anda belum membuat tiket komplain'})
+         res.status(404).json({ message: 'Anda belum mempunyai tiket yang selesai!'})
    })
 })
 
-ticketRouter.put('/:id/rate', async(req, res) => {
-   const { nilaiRating } = req.body
-   // Ambil rating tiket berdasarkan id_ticket pada koleksi rating
-   const ratingTicket = await Rating.find({id_ticket: req.params.id})
+// POST: /api/customer/tickets/:id/rate
+// Customer memberi rating ke tiket yang sudah selesai (CLOSED)
+ticketRouter.post('/:id/rate', async(req, res) => {
+   const id_ticket = req.params.id
+   const { id_admin, rating } = req.body
 
    var token = req.headers['x-access-token']
    if (!token)
@@ -132,10 +158,15 @@ ticketRouter.put('/:id/rate', async(req, res) => {
       if (err)
          return res.status(500).send({ auth: false, message: 'Gagal mengautentikasi token!'})
       
-      ratingTicket.rating = nilaiRating
-      const updatedRating = await ratingTicket.save()
+      const createRating = new Rating({
+         id_ticket,
+         id_admin,
+         rating,
+      })
 
-      res.status(200).json(updatedRating)
+      const savedRating = await createRating.save()
+
+      res.status(200).json({ message: 'Terimakasih telah memberi rating!' })
    })
 })
 
