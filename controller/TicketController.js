@@ -235,9 +235,8 @@ ticketRouter.get('/lists/:id_user',async(req,res)=>{
         }
         const tickets = await Ticket.find({
             assigned_to:String(req.params.id_user),
-            category : {name: String(req.query.category),
-            detail:""},
-            tag : String(req.query.tag)
+            "category.name" : String(req.query.category),
+            "tag" : String(req.query.tag)
         })
         if(tickets){
             res.status(200).json(tickets)
