@@ -1,8 +1,9 @@
 import mongoose from 'mongoose'
+//const Schema = mongoose.Schema, ObjectId = Schema.ObjectId
 
 const ratingSchema = mongoose.Schema({
     id_ticket: {
-        type: String,
+        type: mongoose.Schema.ObjectId,
         required: true,
     },
     id_admin: {
