@@ -222,22 +222,32 @@ ticketRouter.put('/ticket_id/get-ticket', async(req, res) => {
          })
 })
 
-//GET Ticket search based on tag and category endpoint
-ticketRouter.get('/ticket-list/search', async(req, res) => {
-    const tickets = await Ticket.aggregate(
-        [{
-                $match: { tag: String(req.query.tag) }
-            },
-            {
-                $match: { category: String(req.query.category) }
-            }
-        ]
-    )
-    if (tickets) {
-        res.json(tickets)
-    } else {
-        res.send("Ticket not found")
+//Endpoint untuk mencari tiket yang telah diassign pada diri sendiri berdasarkan tag dan category
+//GET /api/spv/tickets/ticket-list/:id_user
+//GET /api/cs/tickets/ticket-list/:id_user
+
+ticketRouter.get('/ticket-list/:id_user',async(req,res)=>{
+    var token = req.headers['x-access-token']
+    if(!token){
+        return res.status(401).send({auth:false, message:'Tidak ada token yang diberikan'})
     }
+    JWT.verify(token,Config.secret,async(err,decode)=>{
+        if(err){
+            return res.status(500).send({auth:false, message:'Failed to authenticate token'})
+        }
+        const tickets = await Ticket.find({
+            assigned_to:String(req.params.id_user),
+            category : String(req.query.category),
+            tag : String(req.query.tag)
+        })
+        if(tickets){
+            res.status(200).json(tickets)
+        } else {
+            res.status(201).json({
+                message: 'Ticket not found'
+            })
+        }
+    })
 })
 
 //CLOSE TICKET
