@@ -274,37 +274,47 @@ SpvRouter.post('/change-password', async(req, res) => {
 //Mendaftarkan CS
 //POST /api/spv/add-cs
 SpvRouter.post('/add-cs', async(req, res) => {
-    try {
-        const { name, email, password, photo, pub_name, pub_photo, final_rating } = req.body
-        const csAccount = await CustService.findOne({ email })
-
-        if (csAccount) {
-            res.status(201).json({
-                message: 'Email has been registered, please enter another email'
-            })
-        } else {
-            var saltRounds = 12
-            const hashedPw = await bcrypt.hash(password, saltRounds)
-            var rand = Math.floor(Math.random()*10000)+1000
-            const createdCS = new CustService({
-                "name": name,
-                "personal_id": "CS-"+String(rand),
-                "email": email,
-                "password": hashedPw,
-                "photo": photo,
-                "pub_name": pub_name,
-                "pub_photo": pub_photo,
-                "final_rating": final_rating
-            })
-            const savedCS = await createdCS.save()
-            res.status(201).json(savedCS)
-        }
-    } catch (error) {
-        res.status(500).json({
-            error: error
-        })
+    var token = req.headers['x-access-token']
+    if(!token){
+        return res.status(401).send({auth:false, message:'Tidak ada token yang diberikan'})
     }
+    jwt.verify(token,Config.secret,async(err,decode)=>{
+        if(err){
+            return res.status(500).send({auth:false, message:'Failed to authenticate token'})
+        }
+        try {
+            const { name, email, password, photo, pub_name, pub_photo, final_rating } = req.body
+            const csAccount = await CustService.findOne({ email })
+    
+            if (csAccount) {
+                res.status(201).json({
+                    message: 'Email has been registered, please enter another email'
+                })
+            } else {
+                var saltRounds = 12
+                const hashedPw = await bcrypt.hash(password, saltRounds)
+                var rand = Math.floor(Math.random()*10000)+1000
+                const createdCS = new CustService({
+                    "name": name,
+                    "personal_id": "CS-"+String(rand),
+                    "email": email,
+                    "password": hashedPw,
+                    "photo": photo,
+                    "pub_name": pub_name,
+                    "pub_photo": pub_photo,
+                    "final_rating": final_rating
+                })
+                const savedCS = await createdCS.save()
+                res.status(201).json(savedCS)
+            }
+        } catch (error) {
+            res.status(500).json({
+                error: error
+            })
+        }
+    })
 })
+
 //GET CS profile
 SpvRouter.get('/cs/profile/id', async(req,res)=>{
     const csProfile= await CustService.findById(req.query.id)
