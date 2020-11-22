@@ -94,7 +94,7 @@ ticketRouter.get('/lists', async(req, res) => {
 })
 
 // GET: /api/customer/tickets/history
-// Customer melihat daftar tiket yang sudah selesai (closed) dan dirating
+// Customer melihat daftar tiket yang sudah selesai (CLOSED) dan beserta RATING-nya
 ticketRouter.get('/history', async(req, res) => {
    var token = req.headers['x-access-token']
    if (!token)
@@ -106,6 +106,27 @@ ticketRouter.get('/history', async(req, res) => {
       
       const id_cust = decode.customer._id
       
+      /*const listClosedTicket = await Rating.aggregate([
+         {
+            $lookup: {
+               from: 'tickets',
+               //localField: 'id_ticket',
+               //foreignField: '_id',
+               pipeline: [{ $match: { tag: 'CLOSED' } }],
+               as: 'ticket'
+            }
+         }, {
+            $project: {
+               _id: 0, // objectId Rating
+               rating: 1,
+               'ticket.ticket_id': 1,
+               'ticket.complaint_name': 1,
+               'ticket.tag': 1,
+               'ticket.status': 1,
+            }
+         }
+      ])*/
+
       const listClosedTicket = await Ticket.aggregate([
          {
             $match: { tag: 'CLOSED' }
@@ -116,26 +137,19 @@ ticketRouter.get('/history', async(req, res) => {
                foreignField: 'id_ticket',
                as: 'rating'
             }
-         }/*, {
-            $project: {
-               _id: 1, // ObjectId tiket
+         }, {
+            $project: { // Filter field yang mau ditampilkan / tidak
+               _id: 1, // ObjectId ticket
                ticket_id: 1,
                complaint_name: 1,
                tag: 1,
                status: 1,
+               rating: 1,
+               createdAt: 1,
+               updatedAt: 1
             }
-         }*/
+         }
       ])
-      
-      /*const listClosedTicket = await Ticket.find({
-         id_cust, tag: 'CLOSED'
-      }, {
-         _id: 1,
-         ticket_id: 1,
-         complaint_name: 1,
-         tag: 1,
-         status: 1,
-      })*/
       
       if(listClosedTicket && listClosedTicket.length !== 0)
          res.status(200).json(listClosedTicket)
@@ -188,7 +202,7 @@ ticketRouter.get('/ticket-list/unread', async(req, res) => {
             res.status(200).json(tickets)
         } else {
             res.status(201).json({
-                message: "Ticket is empty"})
+               message: "Ticket is empty"})
         }
       })
     
