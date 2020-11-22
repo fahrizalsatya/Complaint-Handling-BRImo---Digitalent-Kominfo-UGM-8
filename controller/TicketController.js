@@ -12,7 +12,7 @@ ticketRouter.use(bodyParser.json())
 
 // POST: /api/customer/tickets/init_ticket
 // Customer membuat tiket komplain
-ticketRouter.post('/init_ticket', async(req, res) => { 
+ticketRouter.post('/init-ticket', async(req, res) => { 
    try {
       const {
          complaint_name,
