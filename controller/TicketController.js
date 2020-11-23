@@ -325,9 +325,11 @@ ticketRouter.get('/lists/escalated', async(req, res) => {
                $match: { tag: 'ESCALATED' }
           })
          if (tickets) {
-              res.json(tickets)
+              res.status(200).json(tickets)
          } else {
-              res.send("Ticket not found")
+              res.status(201).json({
+                 message: "Ticket not found"
+               })
            }
       })
    } catch (error) {
