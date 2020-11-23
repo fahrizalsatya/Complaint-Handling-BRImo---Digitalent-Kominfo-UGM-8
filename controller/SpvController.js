@@ -381,6 +381,8 @@ SpvRouter.get('/best-cs',async(req,res)=>{
     }
 })
 
+// DELETE /api/spv/cs-delete/:id
+// Menghapus akun CS berdasarkan _id mereka
 SpvRouter.delete('/cs-delete/:id', async(req, res) => {
     try {
         var token = req.headers['x-access-token']
