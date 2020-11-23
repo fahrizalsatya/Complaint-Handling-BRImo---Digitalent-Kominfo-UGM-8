@@ -452,7 +452,7 @@ ticketRouter.get('/lists/my-ticket', async(res,req)=>{
          }
          const id_admin = decode.adminService._id
          const listTicket = await Ticket.find({            
-               assigned_to: String(decode.adminService._id),
+               assigned_to: String(id_admin),
                // "tag" : "ON"
                // status: "ON PROGRESS"
              }
