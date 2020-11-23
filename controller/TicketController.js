@@ -83,6 +83,7 @@ ticketRouter.get('/lists', async(req, res) => {
             tag: 1,
             status: 1,
             assigned_to: 1,
+            reply: 1,
             createdAt: 1,
             updatedAt: 1
          })
@@ -186,6 +187,37 @@ ticketRouter.post('/:id/rate', async(req, res) => {
    }
 })
 
+// POST /api/cs/tickets/:id/reply
+// POST /api/spv/tickets/:id/reply
+// Memberikan balasan terhadap tiket customer berdasarkan _id
+ticketRouter.put('/:id/reply', async(req, res) => {
+   try {
+      const { reply } = req.body
+
+      var token = req.headers['x-access-token']
+      if (!token)
+         res.status(401).send({ auth: false, message: 'Tidak ada token yang diberikan!' })
+
+      jwt.verify(token, Config.secret, async(err) => {
+         if(err)
+            res.status(500).send({ auth: false, message: 'Gagal mengautentikasi token!' })
+
+         const ticket = await Ticket.findById(req.params.id)
+
+         if(ticket) {
+            ticket.reply = reply
+            const updatedTicket = await ticket.save()
+
+            res.status(200).json({ message: 'Berhasil membalas tiket!' })
+         } else {
+            res.status(201).json({ message: 'Gagal membuat balasan tiket!' })
+         }
+      })
+   } catch (error) {
+      
+   }
+})
+
 //ticket list unread for CS
 //GET api/cs/tickets/lists/unread
 ticketRouter.get('/lists/unread', async(req, res) => {
@@ -229,18 +261,16 @@ ticketRouter.put('/ticket_id/get-ticket', async(req, res) => {
             return res.status(500).send({ auth: false, message: 'Failed to authenticate token!' })
          }
          const ticket = await Ticket.findById(req.query.ticket_id)
-          if (ticket) {
-             ticket.assigned_to = decode.adminService._id,
-             ticket.tag = "ON PROGRESS",
-             ticket.status= "READ"
-             const updateTicket = await ticket.save()
-             res.status(200).json(updateTicket)
-            } else {
-               res.status(201).json({
-                  message: "Update ticket failed"
-               })
-            }
-         })
+         if (ticket) {
+            ticket.assigned_to = decode.adminService._id,
+            ticket.tag = "ON PROGRESS",
+            ticket.status= "READ"
+            const updateTicket = await ticket.save()
+            res.status(200).json(updateTicket)
+         } else {
+            res.status(201).json({ message: "Update ticket failed" })
+         }
+      })
    } catch (error) {
       res.status(500).json({
          error: error

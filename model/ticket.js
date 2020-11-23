@@ -53,6 +53,11 @@ const ticketSchema = mongoose.Schema({
       type: String,
       required: true
    },
+   reply: {
+      type: String,
+      required: false,
+      default: '-',
+   },
 }, {
    timestamps: true,
 })
