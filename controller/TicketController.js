@@ -249,8 +249,8 @@ ticketRouter.put('/ticket_id/get-ticket', async(req, res) => {
 })
 
 //Endpoint untuk mencari tiket yang telah diassign pada diri sendiri berdasarkan tag dan category
-//GET /api/spv/tickets/lists/:id_user
-//GET /api/cs/tickets/lists/:id_user
+//GET /api/spv/tickets/lists/filter
+//GET /api/cs/tickets/lists/filter
 ticketRouter.get('/lists/filter',async(req,res)=>{
    try {
       var token = req.headers['x-access-token']
