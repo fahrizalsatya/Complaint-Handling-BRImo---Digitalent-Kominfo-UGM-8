@@ -77,11 +77,13 @@ ticketRouter.get('/lists', async(req, res) => {
             id_cust, tag: { $ne: 'CLOSED' }
          }, {
             _id: 1,
-            id_ticket: 1,
+            ticket_id: 1,
             complaint_name: 1,
             tag: 1,
             status: 1,
-            assigned_to: 1
+            assigned_to: 1,
+            createdAt: 1,
+            updatedAt: 1
          })
    
          if(listTicketCust && listTicketCust.length !==0)
@@ -125,6 +127,8 @@ ticketRouter.get('/history', async(req, res) => {
                   complaint_name: 1,
                   tag: 1,
                   status: 1,
+                  createdAt: 1,
+                  updatedAt: 1,
                   rating: 1
                }
             }, {
@@ -278,7 +282,7 @@ ticketRouter.get('/lists/:id_user',async(req,res)=>{
 //POST api/customer/tickets/ticket_id/close
 //POST api/spv/tickets/ticket_id/close
 //POST api/cs/tickets/ticket_id/close
-ticketRouter.post('/ticket_id/close', async(req, res) => {
+ticketRouter.put('/ticket_id/close', async(req, res) => {
    try {
       var token = req.headers['x-access-token']
       if (!token) {
