@@ -381,6 +381,8 @@ SpvRouter.get('/best-cs',async(req,res)=>{
     }
 })
 
+//DELETE CS
+//DELETE api/spv/cs-delete/:id
 SpvRouter.delete('/cs-delete/:id', async(req, res) => {
     try {
         var token = req.headers['x-access-token']
