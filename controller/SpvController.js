@@ -346,16 +346,16 @@ SpvRouter.get('/cs-profile/cs_id', async(req,res)=>{
 SpvRouter.get('/cs-list',async(req,res)=>{
     try {
         var token = req.headers['x-access-token']
-    if(!token){
-        return res.status(401).send({ auth: false, message: 'Tidak ada token yang diberikan!' })
-    }
-    jwt.verify(token, Config.secret, async(err, decode)=>{
-        if(err){
-            return res.status(500).send({ auth: false, message: 'Failed to authenticate token!' })
+        if(!token){
+            return res.status(401).send({ auth: false, message: 'Tidak ada token yang diberikan!' })
         }
-        const cslist = await CustService.find({})
-        res.status(200).json(cslist)
-    })  
+        jwt.verify(token, Config.secret, async(err, decode)=>{
+            if(err){
+                return res.status(500).send({ auth: false, message: 'Failed to authenticate token!' })
+            }
+            const cslist = await CustService.find({})
+            res.status(200).json(cslist)
+        })  
     } catch (error) {
         res.status(500).json({error:error})
     }
@@ -371,7 +371,7 @@ SpvRouter.get('/best-cs',async(req,res)=>{
         }
         jwt.verify(token, Config.secret, async(err, decode)=>{
             if(err){
-                return res.status(500).send({ auth: false, message: 'Failed to authenticate token!' })
+                return res.status(500).send({ auth: false, message: 'Gagal mengautentikasi token!' })
             }
             const bestcs = await CustService.find({final_rating:{$gt:0}}).sort({final_rating:-1})
             res.status(200).json(bestcs)
@@ -382,13 +382,27 @@ SpvRouter.get('/best-cs',async(req,res)=>{
 })
 
 SpvRouter.delete('/cs-delete/:id', async(req, res) => {
-    const csAccount = await CustService.findById(req.params.id)
+    try {
+        var token = req.headers['x-access-token']
+        if (!token)
+            return res.status(401).send({ auth: false, message: 'Tidak ada token yang diberikan!' })
 
-    if(user) {
-        await csAccount.remove()
-        res.json({ message: 'Akun CS berhasil dihapus!' })
-    } else {
-        res.status(404).json({ message: 'Akun CS tidak ada!' })
+        jwt.verify(token, Config.secret, async(err) => {
+            if (err)
+                return res.status(500).send({ auth: false, message: 'Gagal mengautentikasi token!' })
+
+            const csAccount = await CustService.findById(req.params.id)
+
+            if(csAccount) {
+                await csAccount.remove()
+                res.status(200).json({ message: `Akun CS ${ req.params.id } berhasil dihapus!` })
+            } else {
+                res.status(404).json({ message: `Akun CS ${ req.params.id } tidak ada!` })
+            }
+        })
+        
+    } catch (error) {
+        res.status(500).json({ error: error })
     }
 })
 
