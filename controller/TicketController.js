@@ -4,6 +4,7 @@ import Rating from '../model/rating.js'
 import jwt from 'jsonwebtoken'
 import Config from '../config/config.js'
 import bodyParser from 'body-parser'
+import bcrypt from 'bcrypt'
 
 const ticketRouter = express.Router()
 
@@ -439,7 +440,7 @@ ticketRouter.put('/ticket_id/update-category', async(req,res)=>{
 
 //GET my ticket list for CS and SPV
 //GET /api/spv/tickets/lists/my-ticket
-//PUT /api/cs/tickets/lists/my-ticket
+//GET /api/cs/tickets/lists/my-ticket
 ticketRouter.get('/lists/my-ticket', async(res,req)=>{
    try {
       var token = req.headers['x-access-token']

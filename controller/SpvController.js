@@ -304,7 +304,7 @@ SpvRouter.post('/add-cs', async(req, res) => {
                     "final_rating": final_rating
                 })
                 const savedCS = await createdCS.save()
-                res.status(201).json(savedCS)
+                res.status(200).json(savedCS)
             }
         })
     } catch (error) {
