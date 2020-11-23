@@ -106,7 +106,7 @@ SpvRouter.post('/resend', async(req, res) => {
 
 //Verify
 //POST /api/spv/verify/:email/:token
-SpvRouter.post('/verify/:email/:token', async(req, res) => {
+SpvRouter.get('/verify/:email/:token', async(req, res) => {
     try{
     // Find a matching token
     secretCodeSpv.findOne({ token: req.params.token }, function(err, token) {

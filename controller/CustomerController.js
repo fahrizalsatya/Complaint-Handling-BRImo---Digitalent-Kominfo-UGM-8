@@ -105,8 +105,8 @@ CustomerRouter.post('/resend', async(req, res) => {
 })
 
 //Verify
-//POST /api/customer/verify/:email/:token
-CustomerRouter.post('/verify/:email/:token', async(req, res) => {
+//GET /api/customer/verify/:email/:token
+CustomerRouter.get('/verify/:email/:token', async(req, res) => {
     try{
     // Find a matching token
     secretCode.findOne({ token: req.params.token }, function(err, token) {
