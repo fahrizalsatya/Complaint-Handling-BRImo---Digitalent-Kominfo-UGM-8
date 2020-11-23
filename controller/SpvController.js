@@ -397,9 +397,9 @@ SpvRouter.delete('/cs-delete/:id', async(req, res) => {
 
             if(csAccount) {
                 await csAccount.remove()
-                res.status(200).json({ message: `Akun CS ${ req.params.id } berhasil dihapus!` })
+                res.status(200).json({ message: `Akun CS ${ csAccount.name } berhasil dihapus!` })
             } else {
-                res.status(404).json({ message: `Akun CS ${ req.params.id } tidak ada!` })
+                res.status(404).json({ message: `Akun CS ${ csAccount.name } tidak ada!` })
             }
         })
         
