@@ -4,6 +4,7 @@ import Rating from '../model/rating.js'
 import jwt from 'jsonwebtoken'
 import Config from '../config/config.js'
 import bodyParser from 'body-parser'
+import bcrypt from 'bcrypt'
 
 const ticketRouter = express.Router()
 
