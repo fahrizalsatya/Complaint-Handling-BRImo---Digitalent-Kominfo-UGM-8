@@ -63,116 +63,129 @@ ticketRouter.post('/init-ticket', async(req, res) => {
 // GET: /api/customer/tickets/lists
 // Customer melihat daftar tiket yang aktif
 ticketRouter.get('/lists', async(req, res) => {
-   var token = req.headers['x-access-token']
-   if (!token)
-      return res.status(401).send({ auth: false, message: 'Tidak ada token yang diberikan!' })
-   
-   jwt.verify(token, Config.secret, async(err, decode) => {
-      if (err)
-         return res.status(500).send({ auth: false, message: 'Failed to authenticate token!' })
+   try {
+      var token = req.headers['x-access-token']
+      if (!token)
+         return res.status(401).send({ auth: false, message: 'Tidak ada token yang diberikan!' })
       
-      const id_cust = decode.customer._id
-      const listTicketCust = await Ticket.find({
-         id_cust, tag: { $ne: 'CLOSED' }
-      }, {
-         _id: 1,
-         id_ticket: 1,
-         complaint_name: 1,
-         tag: 1,
-         status: 1,
-         assigned_to: 1
+      jwt.verify(token, Config.secret, async(err, decode) => {
+         if (err)
+            return res.status(500).send({ auth: false, message: 'Failed to authenticate token!' })
+         
+         const id_cust = decode.customer._id
+         const listTicketCust = await Ticket.find({
+            id_cust, tag: { $ne: 'CLOSED' }
+         }, {
+            _id: 1,
+            id_ticket: 1,
+            complaint_name: 1,
+            tag: 1,
+            status: 1,
+            assigned_to: 1
+         })
+   
+         if(listTicketCust && listTicketCust.length !==0)
+            res.status(200).json(listTicketCust)
+         else
+            res.status(404).json({ message: 'Anda belum membuat tiket komplain'})
       })
-
-      if(listTicketCust && listTicketCust.length !==0)
-         res.status(200).json(listTicketCust)
-      else
-         res.status(404).json({ message: 'Anda belum membuat tiket komplain'})
-   })
+   } catch (error) {
+      res.status(500).json({error:error})
+   }
 })
 
 // GET: /api/customer/tickets/history
 // Customer melihat daftar tiket yang sudah selesai (CLOSED) dan beserta RATING-nya
 ticketRouter.get('/history', async(req, res) => {
-   var token = req.headers['x-access-token']
-   if (!token)
-      return res.status(401).send({ auth: false, message: 'Tidak ada token yang diberikan!' })
-   
-   jwt.verify(token, Config.secret, async(err, decode) => {
-      if (err)
-         return res.status(500).send({ auth: false, message: 'Gagal mengauntentikasi token!' })
+   try {
+      var token = req.headers['x-access-token']
+      if (!token)
+         return res.status(401).send({ auth: false, message: 'Tidak ada token yang diberikan!' })
       
-      const id_cust = decode.customer._id
-
-      const listClosedTicket = await Ticket.aggregate([
-         {
-            $match: { id_cust, tag: 'CLOSED' }
-         }, {
-            $lookup: {
-               from: 'ratings',
-               localField: '_id',
-               foreignField: 'id_ticket',
-               as: 'rating'
-            }
-         }, {
-            $project: { // Filter field yang mau ditampilkan
-               _id: 1, // ObjectId ticket
-               ticket_id: 1,
-               complaint_name: 1,
-               tag: 1,
-               status: 1,
-               rating: 1
-            }
-         }, {
-            $project: { // Filter field yang tidak ditampilkan
-               rating: {
-                  _id: 0,
-                  id_ticket: 0,
-                  id_admin: 0,
-                  createdAt: 0,
-                  updatedAt: 0,
-                  __v: 0
+      jwt.verify(token, Config.secret, async(err, decode) => {
+         if (err)
+            return res.status(500).send({ auth: false, message: 'Gagal mengauntentikasi token!' })
+         
+         const id_cust = decode.customer._id
+   
+         const listClosedTicket = await Ticket.aggregate([
+            {
+               $match: { id_cust, tag: 'CLOSED' }
+            }, {
+               $lookup: {
+                  from: 'ratings',
+                  localField: '_id',
+                  foreignField: 'id_ticket',
+                  as: 'rating'
+               }
+            }, {
+               $project: { // Filter field yang mau ditampilkan
+                  _id: 1, // ObjectId ticket
+                  ticket_id: 1,
+                  complaint_name: 1,
+                  tag: 1,
+                  status: 1,
+                  rating: 1
+               }
+            }, {
+               $project: { // Filter field yang tidak ditampilkan
+                  rating: {
+                     _id: 0,
+                     id_ticket: 0,
+                     id_admin: 0,
+                     createdAt: 0,
+                     updatedAt: 0,
+                     __v: 0
+                  }
                }
             }
-         }
-      ])
-      
-      if(listClosedTicket && listClosedTicket.length !== 0)
-         res.status(200).json(listClosedTicket)
-      else
-         res.status(404).json({ message: 'Anda belum mempunyai tiket yang selesai!'})
-   })
+         ])
+         
+         if(listClosedTicket && listClosedTicket.length !== 0)
+            res.status(200).json(listClosedTicket)
+         else
+            res.status(404).json({ message: 'Anda belum mempunyai tiket yang selesai!'})
+      })
+   } catch (error) {
+      res.status(500).json({error:error})
+   }
 })
 
 // POST: /api/customer/tickets/:id/rate
 // Customer memberi rating ke tiket yang sudah selesai (CLOSED)
 ticketRouter.post('/:id/rate', async(req, res) => {
-   const id_ticket = req.params.id
-   const { id_admin, rating } = req.body
-
-   var token = req.headers['x-access-token']
-   if (!token)
-      return res.status(401).send({ auth: false, message: 'Tidak ada token yang diberikan!'})
-
-   jwt.verify(token, Config.secret, async(err, decode) => {
-      if (err)
-         return res.status(500).send({ auth: false, message: 'Gagal mengautentikasi token!'})
-      
-      const createRating = new Rating({
-         id_ticket,
-         id_admin,
-         rating,
+   try {
+      const id_ticket = req.params.id
+      const { id_admin, rating } = req.body
+   
+      var token = req.headers['x-access-token']
+      if (!token)
+         return res.status(401).send({ auth: false, message: 'Tidak ada token yang diberikan!'})
+   
+      jwt.verify(token, Config.secret, async(err, decode) => {
+         if (err)
+            return res.status(500).send({ auth: false, message: 'Gagal mengautentikasi token!'})
+         
+         const createRating = new Rating({
+            id_ticket,
+            id_admin,
+            rating,
+         })
+   
+         const savedRating = await createRating.save()
+   
+         res.status(200).json({ message: 'Terimakasih telah memberi rating!' })
       })
-
-      const savedRating = await createRating.save()
-
-      res.status(200).json({ message: 'Terimakasih telah memberi rating!' })
-   })
+   } catch (error) {
+      res.status(500).json({error:error})
+   }
 })
 
 //ticket list unread for CS
 //GET api/cs/tickets/lists/unread
 ticketRouter.get('/lists/unread', async(req, res) => {
-    var token = req.headers['x-access-token']
+   try {
+      var token = req.headers['x-access-token']
     if (!token) {
        return res.status(401).send({ auth: false, message: 'Tidak ada token yang diberikan!' })
       }
@@ -190,15 +203,19 @@ ticketRouter.get('/lists/unread', async(req, res) => {
                message: "Ticket is empty"})
         }
       })
-    
+   } catch (error) {
+      res.status(500).json({
+         error: error
+     })
+   }
 })
 
 //Klaim tiket oleh CS and SPV
 //PUT /api/spv/tickets/ticket_id/get-ticket
 //PUT /api/cs/tickets/ticket_id/get-ticket
 ticketRouter.put('/ticket_id/get-ticket', async(req, res) => {
-    //const [idTicket, idCS] = req.body
-    var token = req.headers['x-access-token']
+   try {
+      var token = req.headers['x-access-token']
     if (!token) {
        return res.status(401).send({ auth: false, message: 'Tidak ada token yang diberikan!' })
       }
@@ -219,33 +236,42 @@ ticketRouter.put('/ticket_id/get-ticket', async(req, res) => {
                })
             }
          })
+   } catch (error) {
+      res.status(500).json({
+         error: error
+     })
+   }
 })
 
 //Endpoint untuk mencari tiket yang telah diassign pada diri sendiri berdasarkan tag dan category
 //GET /api/spv/tickets/lists/:id_user
 //GET /api/cs/tickets/lists/:id_user
 ticketRouter.get('/lists/:id_user',async(req,res)=>{
-    var token = req.headers['x-access-token']
-    if(!token){
-        return res.status(401).send({auth:false, message:'Tidak ada token yang diberikan'})
-    }
-    jwt.verify(token,Config.secret,async(err,decode)=>{
-        if(err){
-            return res.status(500).send({auth:false, message:'Failed to authenticate token'})
-        }
-        const tickets = await Ticket.find({
-            assigned_to:String(req.params.id_user),
-            "category.name" : String(req.query.category),
-            "tag" : String(req.query.tag)
-        })
-        if(tickets){
-            res.status(200).json(tickets)
-        } else {
-            res.status(201).json({
-                message: 'Ticket not found'
-            })
-        }
-    })
+   try {
+      var token = req.headers['x-access-token']
+      if(!token){
+          return res.status(401).send({auth:false, message:'Tidak ada token yang diberikan'})
+      }
+      jwt.verify(token,Config.secret,async(err,decode)=>{
+          if(err){
+              return res.status(500).send({auth:false, message:'Failed to authenticate token'})
+          }
+          const tickets = await Ticket.find({
+              assigned_to:String(req.params.id_user),
+              "category.name" : String(req.query.category),
+              "tag" : String(req.query.tag)
+          })
+          if(tickets){
+              res.status(200).json(tickets)
+          } else {
+              res.status(201).json({
+                  message: 'Ticket not found'
+              })
+          }
+      })
+   } catch (error) {
+      res.status(500).json({error:error})
+   }
 })
 
 //CLOSE TICKET
@@ -253,25 +279,29 @@ ticketRouter.get('/lists/:id_user',async(req,res)=>{
 //POST api/spv/tickets/ticket_id/close
 //POST api/cs/tickets/ticket_id/close
 ticketRouter.post('/ticket_id/close', async(req, res) => {
-   var token = req.headers['x-access-token']
-   if (!token) {
-      return res.status(401).send({ auth: false, message: 'Tidak ada token yang diberikan!' })
-   }
-   jwt.verify(token, Config.secret, async(err, decode) =>{
-      if (err) {
-         return res.status(500).send({ auth: false, message: 'Failed to authenticate token!' })
+   try {
+      var token = req.headers['x-access-token']
+      if (!token) {
+         return res.status(401).send({ auth: false, message: 'Tidak ada token yang diberikan!' })
       }
-      const ticket = await Ticket.findById(req.query.ticket_id)
-      if (ticket) {
-         ticket.tag = String('CLOSED')
-         const updateTicket= await ticket.save()
-         res.status(200).json(updateTicket)
-      }else{
-      res.status(201).json({
-         message: "ticket CLOSED failed"
+      jwt.verify(token, Config.secret, async(err, decode) =>{
+         if (err) {
+            return res.status(500).send({ auth: false, message: 'Failed to authenticate token!' })
+         }
+         const ticket = await Ticket.findById(req.query.ticket_id)
+         if (ticket) {
+            ticket.tag = String('CLOSED')
+            const updateTicket= await ticket.save()
+            res.status(200).json(updateTicket)
+         }else{
+            res.status(201).json({
+               message: "ticket CLOSED failed"
+            })
+         }
       })
-      }
-   })
+   } catch (error) {
+      res.status(500).json({error:error})
+   }
 })
 
 // GET Escalated Ticket List for SPV
@@ -342,7 +372,8 @@ ticketRouter.get('/lists/escalated', async(req, res) => {
 //PUT /api/spv/tickets/ticket_id/update-tag
 //PUT /api/cs/tickets/ticket_id/update-tag
 ticketRouter.put('/ticket_id/update-tag', async(req,res)=>{
-   var token = req.headers['x-access-token']
+   try {
+      var token = req.headers['x-access-token']
    if (!token) {
       return res.status(401).send({ auth: false, message: 'Tidak ada token yang diberikan!' })
      }
@@ -361,13 +392,17 @@ ticketRouter.put('/ticket_id/update-tag', async(req,res)=>{
          })
         }
       })
+   } catch (error) {
+      res.status(500).json({error:error})
+   }
 })
 
 //Update category ticket for CS and SPV
 //PUT /api/spv/tickets/ticket_id/update-category
 //PUT /api/cs/tickets/ticket_id/update-category
 ticketRouter.put('/ticket_id/update-category', async(req,res)=>{
-   var token = req.headers['x-access-token']
+   try {
+      var token = req.headers['x-access-token']
    if (!token) {
       return res.status(401).send({ auth: false, message: 'Tidak ada token yang diberikan!' })
      }
@@ -393,6 +428,9 @@ ticketRouter.put('/ticket_id/update-category', async(req,res)=>{
          })
         }
       })
+   } catch (error) {
+      res.status(500).json({error:error})
+   }
 })
 
 export default ticketRouter
