@@ -433,4 +433,42 @@ ticketRouter.put('/ticket_id/update-category', async(req,res)=>{
    }
 })
 
+//GET my ticket list for CS and SPV
+//GET /api/spv/tickets/lists/my-ticket
+//PUT /api/cs/tickets/lists/my-ticket
+ticketRouter.get('/lists/my-ticket', async(res,req)=>{
+   try {
+      var token = req.headers['x-access-token']
+      if (!token){
+         return res.status(401).send({ auth: false, message: 'Tidak ada token yang diberikan!' })
+      }
+      jwt.verify(token, Config.secret, async(err, decode) => {
+         if (err){
+            return res.status(500).send({ auth: false, message: 'Failed to authenticate token!' })
+         }
+         const id_admin = decode.adminService._id
+         const listTicket = await Ticket.find({            
+               assigned_to: String(decode.adminService._id),
+               // "tag" : "ON"
+               // status: "ON PROGRESS"
+             }
+         , {
+            _id: 1,
+            id_ticket: 1,
+            complaint_name: 1,
+            tag: 1,
+            status: 1,
+            assigned_to: 1
+         })
+         if(listTicket && listTicket.length !==0)
+            res.status(200).json(listTicket)
+         else
+            res.status(404).json({
+               message: 'Ticket Empty'
+            })
+      })
+   } catch (error) {
+      res.status(500).json({error:error})
+   }
+})
 export default ticketRouter
