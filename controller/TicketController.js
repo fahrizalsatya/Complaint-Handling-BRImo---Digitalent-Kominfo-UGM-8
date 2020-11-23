@@ -282,7 +282,7 @@ ticketRouter.get('/lists/:id_user',async(req,res)=>{
 //POST api/customer/tickets/ticket_id/close
 //POST api/spv/tickets/ticket_id/close
 //POST api/cs/tickets/ticket_id/close
-ticketRouter.post('/ticket_id/close', async(req, res) => {
+ticketRouter.put('/ticket_id/close', async(req, res) => {
    try {
       var token = req.headers['x-access-token']
       if (!token) {
