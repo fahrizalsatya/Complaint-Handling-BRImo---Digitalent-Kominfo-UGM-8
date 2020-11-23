@@ -441,7 +441,7 @@ ticketRouter.put('/ticket_id/update-category', async(req,res)=>{
 //GET my ticket list for CS and SPV
 //GET /api/spv/tickets/lists/my-ticket
 //PUT /api/cs/tickets/lists/my-ticket
-ticketRouter.get('/lists/my_ticket',async(req,res)=>{
+ticketRouter.get('/lists/my-ticket',async(req,res)=>{
    try {
       var token = req.headers['x-access-token']
       if(!token){
