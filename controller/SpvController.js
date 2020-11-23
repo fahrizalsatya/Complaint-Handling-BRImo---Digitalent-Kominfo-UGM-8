@@ -381,5 +381,16 @@ SpvRouter.get('/best-cs',async(req,res)=>{
     }
 })
 
+SpvRouter.delete('/cs-delete/:id', async(req, res) => {
+    const csAccount = await CustService.findById(req.params.id)
+
+    if(user) {
+        await csAccount.remove()
+        res.json({ message: 'Akun CS berhasil dihapus!' })
+    } else {
+        res.status(404).json({ message: 'Akun CS tidak ada!' })
+    }
+})
+
 export default SpvRouter
 
