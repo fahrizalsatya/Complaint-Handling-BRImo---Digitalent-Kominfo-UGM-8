@@ -314,26 +314,27 @@ ticketRouter.put('/ticket_id/close', async(req, res) => {
 ticketRouter.get('/lists/escalated', async(req, res) => {
    try {
       var token = req.headers['x-access-token']
-      if (!token) 
-         return res.status(401).send({ auth: false, message: 'TIdak ada token yang diberikan!' })
-
-      jwt.verify(token, Config.secret, async(err, decode) => {
-         if (err)
-            return res.status(500).send({ auth: false, message: 'Failed to authenticate token!'})
-           
-         const tickets = await Ticket.aggregate({
-               $match: { tag: 'ESCALATED' }
-          })
-         if (tickets) {
-              res.status(200).json(tickets)
-         } else {
-              res.status(201).json({
-                 message: "Ticket not found"
-               })
-           }
+    if (!token) {
+       return res.status(401).send({ auth: false, message: 'Tidak ada token yang diberikan!' })
+      }
+      jwt.verify(token, Config.secret, async(err, decode) =>{
+         if (err) {
+            return res.status(500).send({ auth: false, message: 'Failed to authenticate token!' })
+         }
+         const tickets = await Ticket.aggregate([
+            { $match: { tag: "ESCALATED" } }
+        ])
+        if (tickets) {
+            res.status(200).json(tickets)
+        } else {
+            res.status(201).json({
+               message: "Ticket is empty"})
+        }
       })
    } catch (error) {
-      res.status(500).json({ error: error})
+      res.status(500).json({
+         error: error
+     })
    }
  })
 
