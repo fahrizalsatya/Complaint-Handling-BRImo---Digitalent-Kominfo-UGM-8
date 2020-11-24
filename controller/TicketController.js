@@ -260,7 +260,14 @@ ticketRouter.put('/ticket_id/get-ticket', async(req, res) => {
          if (err) {
             return res.status(500).send({ auth: false, message: 'Failed to authenticate token!' })
          }
-         const ticket = await Ticket.findById(req.query.ticket_id)
+         //findById(req.query.ticket_id)
+         
+         const listTickets = await Ticket.aggregate([
+            { $match: { tag: "SUBMITTED" } }
+         ])
+         const exticket= await listTickets[Math.floor(Math.random() * listTickets.length)]
+         // const exTicket= await Ticket.find({tag:"SUBMITTED",random:{_id: rand}}).limit(1)
+         const ticket = await Ticket.findById(String(exticket._id))
          if (ticket) {
             ticket.assigned_to = decode.adminService._id,
             ticket.tag = "ON PROGRESS",
