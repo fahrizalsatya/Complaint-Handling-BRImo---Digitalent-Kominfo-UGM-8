@@ -1,8 +1,9 @@
 pipeline {
-   agent { docker { image 'node:14-alpine'}}
+   agent any
+   tools { nodejs 'node'}
    stages {
       stage('build') {
-         steps { sh 'npm --version' }
+         steps { sh 'npm config Is' }
       }
    }
 }
