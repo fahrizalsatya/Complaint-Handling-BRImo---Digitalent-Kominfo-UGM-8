@@ -310,9 +310,9 @@ ticketRouter.get('/lists/filter',async(req,res)=>{
 })
 
 //CLOSE TICKET
-//POST api/customer/tickets/ticket_id/close
-//POST api/spv/tickets/ticket_id/close
-//POST api/cs/tickets/ticket_id/close
+//PUT api/customer/tickets/ticket_id/close
+//PUT api/spv/tickets/ticket_id/close
+//PUT api/cs/tickets/ticket_id/close
 ticketRouter.put('/ticket_id/close', async(req, res) => {
    try {
       var token = req.headers['x-access-token']
@@ -502,28 +502,3 @@ ticketRouter.get('/lists/my-ticket',async(req,res)=>{
 }
 )
 export default ticketRouter
-
-//   try {
-//    var token = req.headers['x-access-token']
-//    if (!token) {
-//       return res.status(401).send({ auth: false, message: 'Tidak ada token yang diberikan!' })
-//      }
-//      jwt.verify(token, Config.secret, async(err, decode) =>{
-//         if (err) {
-//            return res.status(500).send({ auth: false, message: 'Failed to authenticate token!' })
-//         }
-//         const listTicket= await Ticket.find({
-//            assigned_to:String(decode.adminService._id)
-//         })
-//         if (listTicket && listTicket.length !== 0) {
-//            res.status(200).json(listTicket)
-//         } else{
-//            res.status(201).json({
-//               message: "Ticket empty"
-//            })
-//         }
-//       })
-//   } catch (error) {
-     
-//   } 
-// }
